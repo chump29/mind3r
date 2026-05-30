@@ -6,6 +6,6 @@ bun run lint-staged
 
 cd ../backend || exit 1
 
-./lint.sh
+uv run pre-commit run
 
 #exit 1
