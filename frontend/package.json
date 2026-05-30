@@ -35,6 +35,7 @@
     "serve": "cd dist || exit 1 && bunx --bun serve"
   },
   "lint-staged": {
+    "*": "cspell --no-must-find-files",
     "*.{json,ts,tsx}": "biome ci --no-errors-on-unmatched",
     "*.css": [
       "biome ci --no-errors-on-unmatched",
