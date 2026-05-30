@@ -1,0 +1,85 @@
+@host = http://localhost:{{$dotenv API_PORT}}/api
+
+###
+
+@rnd_id = {{$randomInt 1000 2000}}
+@rnd_date = {{$randomInt 2026 2030}}-{{$randomInt 10 12}}-{{$randomInt 10 30}}T{{$randomInt 10 23}}:{{$randomInt 10 59}}
+
+###
+
+// Get API version
+
+GET {{host}}/version
+
+###
+
+// Get all reminders
+// NOTE: will be empty array if no data found
+
+GET {{host}}/get
+
+###
+
+// Get reminder by ID
+// NOTE: reminder ID does not exist
+
+GET {{host}}/get/{{rnd_id}}
+
+###
+
+// Get reminder by ID
+// NOTE: reminder ID does not exist
+
+GET {{host}}/get/1
+
+###
+
+// Add reminder
+
+POST {{host}}/add
+Content-Type: application/json
+
+{
+    "date": "{{rnd_date}}",
+    "event": "TEST {{rnd_id}}",
+    "description": "TEST ME {{rnd_id}}"
+}
+
+###
+
+// Update reminder by ID
+// NOTE: reminder ID does not exist
+
+PUT {{host}}/update/{{rnd_id}}
+Content-Type: application/json
+
+{
+    "date": "{{rnd_date}}",
+    "event": "NOGO"
+}
+
+###
+
+// Update reminder by ID
+
+PUT {{host}}/update/1
+Content-Type: application/json
+
+{
+    "date": "{{rnd_date}}",
+    "event": "MODIFIED {{rnd_id}}",
+    "description": "MODIFIED {{rnd_id}}"
+}
+
+###
+
+// Delete reminder by ID
+// NOTE: reminder ID does not exist
+
+DELETE {{host}}/delete/{{rnd_id}}
+
+###
+
+// Delete reminder by ID
+
+DELETE {{host}}/delete/1

@@ -1,0 +1,13 @@
+/* cSpell: ignore noto */
+
+@import "tailwindcss";
+
+/*
+name: https://colorkit.co/color/123456
+oklch: https://oklch.com/
+*/
+
+@theme {
+  --font-title: "Noto Sans Display", sans-serif;
+  --color-og107: oklch(44.32% 0.0271 135.14deg); /* 4D5748, Verdant Hush */
+}

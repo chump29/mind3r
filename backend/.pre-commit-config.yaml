@@ -1,0 +1,23 @@
+fail_fast: true
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: check-toml
+      - id: check-yaml
+  - repo: https://github.com/dotenv-linter/dotenv-linter
+    rev: v4.0.0
+    hooks:
+      - id: dotenv-linter
+        args: [check]
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.46.3
+    hooks:
+      - id: typos
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.15
+    hooks:
+      - id: ruff-check
+        args: [--extend-select=RUF100]

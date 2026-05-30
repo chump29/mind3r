@@ -1,0 +1,13 @@
+diff --git a/src/pluralize.ts b/src/pluralize.ts
+index 454f7d04f8a6267f10a90084b041b6958de4c848..d693479999ccf3cc7f3816cf3894f39dc27393fe 100644
+--- a/src/pluralize.ts
++++ b/src/pluralize.ts
+@@ -235,7 +235,7 @@ function checkWord(replaceMap: Record<string, string>, keepMap: Record<string, s
+  */
+ const pluralize = function (word: string, count?: number, inclusive?: boolean) {
+   const pluralized = count === 1 ? pluralize.singular(word) : pluralize.plural(word)
+-  return (inclusive ? count + ' ' : '') + pluralized
++  return (inclusive ? count?.toLocaleString() + ' ' : '') + pluralized
+ } as Pluralize
+ 
+ /**
