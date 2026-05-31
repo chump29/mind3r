@@ -1,0 +1,41 @@
+services:
+  mind3r-frontend:
+    container_name: mind3r-frontend
+    image: git.postfmly.com/admin/mind3r-frontend:arm64
+    restart: unless-stopped
+    depends_on:
+      - mind3r-backend
+    ports:
+      - "94:80"
+    environment:
+      - TZ=America/Chicago
+    labels:
+      - wud.display.name=Mɪɴᴅɜʀ (Frontend)
+      - homepage.group=Personal
+      - homepage.name=Mɪɴᴅɜʀ
+      - homepage.icon=https://remind.postfmly.com/mind3r.png
+      - homepage.href=https://remind.postfmly.com/
+      - homepage.description=remind.postfmly.com
+
+  mind3r-backend:
+    container_name: mind3r-backend
+    image: git.postfmly.com/admin/mind3r-backend:arm64
+    restart: unless-stopped
+    ports:
+      - "5559:5559"
+    volumes:
+      - db:/backend/db
+    environment:
+      - TZ=America/Chicago
+    labels:
+      - wud.display.name=Mɪɴᴅɜʀ (Backend)
+    stop_signal: SIGINT
+
+volumes:
+  db:
+
+networks: {}
+
+x-dockge:
+  urls:
+    - https://remind.postfmly.com

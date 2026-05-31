@@ -1,0 +1,168 @@
+name: Build Mɪɴᴅɜʀ
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  BUN_INSTALL_CACHE_DIR: /tmp/.bun-cache
+  PRE_COMMIT_HOME: /tmp/.pre-commit-cache
+  RUFF_CACHE_DIR: /tmp/.ruff-cache
+  UV_CACHE_DIR: /tmp/.uv-cache
+
+jobs:
+  check-frontend:
+    runs-on: amd64
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Get Bun cache
+        uses: actions/cache@v5
+        with:
+          key: bun-${{ github.event.repository.name }}-${{ hashFiles('./bun.lock') }}
+          path: ${{ env.BUN_INSTALL_CACHE_DIR }}
+
+      - name: Install dependencies
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Install dotenv-linter
+        run: curl -sSfL https://git.io/JLbXn | sh -s -- -b /usr/local/bin
+
+      - name: Linting
+        run: bun run lint:ci
+
+      - name: Testing
+        run: bun run test
+
+  check-backend:
+    runs-on: amd64
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: ./backend/.python-version
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+
+      - name: Get uv cache
+        uses: actions/cache@v5
+        with:
+          key: uv-${{ github.event.repository.name }}-${{ hashFiles('./backend/uv.lock') }}
+          path: |
+            ${{ env.UV_CACHE_DIR }}
+            ./backend/.venv
+
+      - name: Install dependencies
+        run: uv sync --extra dev --link-mode=copy
+
+      - name: Get pre-commit cache
+        uses: actions/cache@v5
+        with:
+          key: pre-commit-${{ github.event.repository.name }}-${{ hashFiles('./backend/.pre-commit-config.yaml')}}
+          path: |
+            ${{ env.PRE_COMMIT_HOME }}
+            ${{ env.RUFF_CACHE_DIR }}
+
+      - name: Linting
+        run: ./lint.sh
+
+      - name: Testing
+        run: ./test.sh
+
+  amd64:
+    needs: [check-frontend, check-backend]
+    runs-on: amd64
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Log into repository
+        uses: docker/login-action@v4
+        with:
+          registry: git.postfmly.com
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+
+      - name: Build and push frontend
+        run: |
+          cd frontend
+          docker buildx build --platform linux/amd64 --tag git.postfmly.com/admin/mind3r-frontend:amd64 --push .
+
+      - name: Build and push backend
+        run: |
+          cd backend
+          docker buildx build --platform linux/amd64 --tag git.postfmly.com/admin/mind3r-backend:amd64 --push .
+
+  arm64:
+    needs: [check-frontend, check-backend]
+    runs-on: arm64
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Log into repository
+        uses: docker/login-action@v4
+        with:
+          registry: git.postfmly.com
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+
+      - name: Build and push frontend
+        run: |
+          cd frontend
+          docker buildx build --platform linux/arm64 --tag git.postfmly.com/admin/mind3r-frontend:arm64 --push .
+
+      - name: Build and push backend
+        run: |
+          cd backend
+          docker buildx build --platform linux/arm64 --tag git.postfmly.com/admin/mind3r-backend:arm64 --push .
+
+  manifest:
+    needs: [amd64, arm64]
+    runs-on: amd64
+    steps:
+      - name: Log into repository
+        uses: docker/login-action@v4
+        with:
+          registry: git.postfmly.com
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+
+      - name: Create frontend manifest
+        run: |
+          docker manifest create \
+            git.postfmly.com/admin/mind3r-frontend:latest \
+            git.postfmly.com/admin/mind3r-frontend:amd64 \
+            git.postfmly.com/admin/mind3r-frontend:arm64
+
+      - name: Push frontend manifest
+        run: docker manifest push git.postfmly.com/admin/mind3r-frontend:latest
+
+      - name: Create backend manifest
+        run: |
+          docker manifest create \
+            git.postfmly.com/admin/mind3r-backend:latest \
+            git.postfmly.com/admin/mind3r-backend:amd64 \
+            git.postfmly.com/admin/mind3r-backend:arm64
+
+      - name: Push backend manifest
+        run: docker manifest push git.postfmly.com/admin/mind3r-backend:latest

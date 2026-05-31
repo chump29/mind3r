@@ -1,9 +1,7 @@
+// biome-ignore-all lint/correctness/noUnusedVariables: for Vite environment variables
+
 interface ViteTypeOptions {
   strictImportMetaEnv: unknown
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv
 }
 
 interface ImportMetaEnv {
@@ -12,4 +10,8 @@ interface ImportMetaEnv {
   readonly VITE_API_URL: string
   readonly VITE_DEBUG: string
   readonly VITE_TITLE: string
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
 }

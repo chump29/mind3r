@@ -1,8 +1,10 @@
 __pycache__/
+.coverage
 .env.local
 .ruff_cache/
 .venv/
 .vscode
+coverage/
 db/
 dist/
 node_modules/

@@ -1,0 +1,13 @@
+.env.local
+.htmlvalidate.json
+.husky/
+.npmrc
+.stylelintrc
+*.md
+*.sh
+biome.json
+coverage/
+dist/
+node_modules/
+
+!healthcheck.sh

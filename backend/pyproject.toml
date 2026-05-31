@@ -38,7 +38,7 @@ dependencies = [
 requires-python = ">=3.14"
 
 [project.urls]
-GitHub = "https://github.com/chump29/planrr"
+GitHub = "https://github.com/chump29/mind3r"
 
 [project.optional-dependencies]
 dev = [

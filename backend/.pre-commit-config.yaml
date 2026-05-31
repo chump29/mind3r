@@ -20,12 +20,12 @@ repos:
     hooks:
       - id: dotenv-linter
         args: [check]
-  - repo: https://github.com/crate-ci/typos
-    rev: v1.46.3
+  - repo: https://github.com/streetsidesoftware/cspell-cli
+    rev: v10.0.0
     hooks:
-      - id: typos
+      - id: cspell
+        args: [--no-must-file-files]
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.15
     hooks:
       - id: ruff-check
-        args: [--extend-select=RUF100]
