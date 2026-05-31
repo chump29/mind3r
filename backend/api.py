@@ -54,9 +54,7 @@ DEBUG: Final[bool] = str2bool(getenv("DEBUG")) or False
 DB_PATH: Final[str] = "./db/"
 DB_FILE: Final[str] = getenv("DB_FILE", "mind3r.db")
 DB_STR: Final[str] = f"{DB_PATH}{DB_FILE}"
-DB: Final[SqliteDatabase] = SqliteDatabase(
-    DB_STR, pragmas={"journal_mode": "wal", "wal_checkpoint": "TRUNCATE"}
-)
+DB: Final[SqliteDatabase] = SqliteDatabase(DB_STR, pragmas={"journal_mode": "wal", "wal_checkpoint": "TRUNCATE"})
 
 CONSOLE: Final[Console] = Console()
 catch_exceptions()
@@ -66,7 +64,6 @@ def shutdown(sig: int, _: FrameType | None) -> None:
     """Close database"""
     if DEBUG:
         CONSOLE.print(f"\n❌ {Signals(sig).name } detected")
-    if DEBUG:
         CONSOLE.print("🛢️  Closing database")
     DB.close()
     if DEBUG:
@@ -163,9 +160,7 @@ def get_cache_stats() -> Json | None:
 def delete_expired() -> None:
     """Delete expired reminders"""
     try:
-        count: Final[int] = (
-            Reminder.delete().where(datetime.now(UTC) >= Reminder.date).execute()
-        )
+        count: Final[int] = Reminder.delete().where(datetime.now(UTC) >= Reminder.date).execute()
         if count > 0:
             get_all_reminders.cache_clear()
             if DEBUG:
@@ -186,7 +181,7 @@ def get_version() -> str | None:
 
     try:
         with Path("pyproject.toml").open("rb") as pyproject:
-            version: Final[str] = str(Box(load(pyproject)).project.version)
+            version: Final[str] = str(Box(load(pyproject), frozen_box=True).project.version)
             if not Version.is_valid(version):
                 invalid_version(version)
             if DEBUG:
@@ -227,9 +222,7 @@ def get_one_reminder(pk: int) -> ReminderDTO | None:
 def sanitize(reminder: ReminderDTO) -> ReminderDTO | None:
     """Sanitize input"""
     reminder.event = clean(reminder.event, tags=set())
-    reminder.description = (
-        clean(reminder.description, tags=set()) if reminder.description else None
-    )
+    reminder.description = clean(reminder.description, tags=set()) if reminder.description else None
     return None if not reminder.event else reminder
 
 
@@ -248,9 +241,7 @@ def add_reminder(reminder: ReminderDTO) -> ReminderDTO | None:
                 "Adding reminder",
                 f"date={r.date}, event={r.event}, description={r.description}",
             )
-        event: Final[Reminder] = Reminder.create(
-            date=r.date, event=r.event, description=r.description
-        )
+        event: Final[Reminder] = Reminder.create(date=r.date, event=r.event, description=r.description)
         get_all_reminders.cache_clear()
         return ReminderDTO.model_validate(model_to_dict(event))
     except Exception:  # pylint: disable=broad-exception-caught
@@ -273,9 +264,7 @@ def update_reminder(pk: int, reminder: ReminderDTO) -> ReminderDTO | None:
         get_all_reminders.cache_clear()
         return (
             get_one_reminder(pk)
-            if Reminder.update(date=r.date, event=r.event, description=r.description)
-            .where(Reminder.id == pk)
-            .execute()
+            if Reminder.update(date=r.date, event=r.event, description=r.description).where(Reminder.id == pk).execute()
             > 0
             else None
         )
@@ -325,9 +314,7 @@ except Exception as e:  # pylint: disable=broad-exception-caught
     CONSOLE.print_exception()
     raise SystemExit(1) from e
 
-API: Final[FastAPI] = FastAPI(
-    docs_url="/api/docs", openapi_url="/api/openapi.json", redoc_url="/api/redoc"
-)
+API: Final[FastAPI] = FastAPI(docs_url="/api/docs", openapi_url="/api/openapi.json", redoc_url="/api/redoc")
 API.include_router(ROUTER)
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ repos:
         language: unsupported
         types: [python]
         require_serial: true
+        args: [--max-line-length=120]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
