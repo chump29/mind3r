@@ -39,7 +39,7 @@ import { default as useSWR } from "swr/immutable"
 import { nonEmpty, parseBoolean, pipe, safeParse, string } from "valibot"
 
 import { type IReminder } from "../shared/IReminder.ts"
-import { FetchError, getURL, handleError, SortBy, SortOrder, validate } from "../shared/index.ts"
+import { FetchError, handleError, SortBy, SortOrder, validate } from "../shared/index.ts"
 import {
   DATETIME_FORMAT,
   DateTimeSchema,
@@ -70,7 +70,7 @@ if (DEBUG) {
   info("Debug is ON")
 }
 
-const API_URL: string = await getURL()
+const API_URL: string = import.meta.env.VITE_API_URL
 const API_TIMEOUT: number = ms("3s")
 
 const Th = ({
@@ -109,10 +109,8 @@ const Th = ({
   )
 }
 
-const FETCH_URL: string = `${API_URL}/get`
-
-const fetchData = async (url: string): Promise<IReminder[]> =>
-  await fetch(url, {
+const fetchData = async (url: string): Promise<IReminder[]> => {
+  return await fetch(url, {
     signal: AbortSignal.timeout(API_TIMEOUT)
   })
     .then(async (response: Response): Promise<IReminder[]> => {
@@ -123,7 +121,7 @@ const fetchData = async (url: string): Promise<IReminder[]> =>
       return await response.json()
     })
     .then(async (reminders: IReminder[]): Promise<IReminder[]> => {
-      await validate<IReminder[]>(reminders)
+      reminders = await validate<IReminder[]>(reminders)
 
       if (DEBUG) {
         info(`Got ${pluralize("reminder", reminders.length, true)} from API`)
@@ -135,6 +133,7 @@ const fetchData = async (url: string): Promise<IReminder[]> =>
       handleError(e)
       return []
     })
+}
 
 const Display = (): JSX.Element => {
   const editing: IReminder | null = displayStore((store: IDisplay): IReminder | null => store.editing)
@@ -144,7 +143,7 @@ const Display = (): JSX.Element => {
   const sortBy: SortBy = displayStore((store: IDisplay): SortBy => store.sortBy)
   const sortOrder: SortOrder = displayStore((store: IDisplay): SortOrder => store.sortOrder)
 
-  const { data = [], mutate: refreshData } = useSWR(FETCH_URL, fetchData, {
+  const { data = [], mutate: refreshData } = useSWR(`${API_URL}/get`, fetchData, {
     onSuccess: (data: IReminder[]): void => {
       setFilteredData(data)
 
@@ -277,8 +276,12 @@ const Display = (): JSX.Element => {
         <Text size="sm">Are you sure that you want to delete this reminder? This action cannot be undone.</Text>
       ),
       title: "Delete reminder?",
+      cancelProps: {
+        "data-testid": "testCancel"
+      },
       confirmProps: {
-        color: "red"
+        color: "red",
+        "data-testid": "testConfirm"
       },
       labels: {
         cancel: "Do not delete",
@@ -316,11 +319,11 @@ const Display = (): JSX.Element => {
           throw new Error(`Could not delete ID ${id}`)
         }
 
-        await refreshData()
-
         if (DEBUG) {
           info(`Deleted reminder ID ${id}`)
         }
+
+        await refreshData()
       })
       .catch(handleError)
   }
@@ -335,6 +338,11 @@ const Display = (): JSX.Element => {
         }
 
         return handleCancel()
+      }
+
+      if (DEBUG) {
+        info("Editing reminder:")
+        console.table(r)
       }
 
       await fetch(`${API_URL}/update/${editing.id}`, {
@@ -357,13 +365,13 @@ const Display = (): JSX.Element => {
             throw new Error(`Could not update reminder ID ${(editing satisfies IReminder).id}`)
           }
 
-          await validate<IReminder>(reminder)
-
-          await refreshData()
+          reminder = await validate<IReminder>(reminder)
 
           if (DEBUG) {
             info(`Updated reminder ID ${reminder.id}`)
           }
+
+          await refreshData()
         })
         .catch(handleError)
     } else {
@@ -392,13 +400,13 @@ const Display = (): JSX.Element => {
             throw new Error(`Could not add reminder: ${r.event}`)
           }
 
-          await validate<IReminder>(reminder)
-
-          await refreshData()
+          reminder = await validate<IReminder>(reminder)
 
           if (DEBUG) {
             info(`Added reminder ID ${reminder.id}`)
           }
+
+          await refreshData()
         })
         .catch(handleError)
     }
@@ -440,6 +448,7 @@ const Display = (): JSX.Element => {
             <Tooltip label="Edit">
               <ActionIcon
                 color="var(--color-og107)"
+                data-testid={`testEdit-${row.id}`}
                 onClick={(): void => handleEdit(row.id as number)}
                 variant="outline">
                 <IconPencil color="yellow" size={16} />
@@ -448,6 +457,7 @@ const Display = (): JSX.Element => {
             <Tooltip label="Delete">
               <ActionIcon
                 color="var(--color-og107)"
+                data-testid={`testDelete-${row.id}`}
                 ml={10}
                 onClick={async (): Promise<void> => showConfirm(row.id as number)}
                 variant="outline">
@@ -471,6 +481,7 @@ const Display = (): JSX.Element => {
       <Box bd="1px solid var(--color-og107)" bdrs={6} p={20}>
         <Center>
           <TextInput
+            data-testid="testSearch"
             disabled={!data.length}
             leftSection={<IconSearch color="white" size={16} />}
             onChange={(e: ChangeEvent<HTMLInputElement>): void => filterAndSort(e.currentTarget.value)}
@@ -491,7 +502,7 @@ const Display = (): JSX.Element => {
             w={600}
           />
         </Center>
-        <Table highlightOnHover mt={20}>
+        <Table data-testid="testTable" highlightOnHover mt={20}>
           <Table.Tbody>
             <Table.Tr>
               <Th
@@ -549,6 +560,7 @@ const Display = (): JSX.Element => {
                 <Button
                   c="var(--mantine-color-dark-0)"
                   color="var(--color-og107)"
+                  data-testid="testCancel"
                   leftSection={<IconCancel color="red" />}
                   onClick={handleCancel}
                   variant="outline">
@@ -564,7 +576,7 @@ const Display = (): JSX.Element => {
                 style={{
                   justifyContent: "center"
                 }}>
-                <form onSubmit={form.onSubmit(handleSubmit)}>
+                <form data-testid="testForm" onSubmit={form.onSubmit(handleSubmit)}>
                   <Center>
                     <DateTimePicker
                       {...form.getInputProps("date")}
@@ -586,6 +598,7 @@ const Display = (): JSX.Element => {
                     />
                     <TextInput
                       {...form.getInputProps("event")}
+                      data-testid="testEvent"
                       label="Event"
                       maxLength={MAX_LEN_EVENT}
                       ml={20}
@@ -596,6 +609,7 @@ const Display = (): JSX.Element => {
                     />
                     <Textarea
                       {...form.getInputProps("description")}
+                      data-testid="testDescription"
                       label="Description"
                       maxLength={MAX_LEN_DESCRIPTION}
                       maxRows={2}
@@ -614,6 +628,7 @@ const Display = (): JSX.Element => {
                       <Button
                         c="var(--mantine-color-dark-0)"
                         color="var(--color-og107)"
+                        data-testid="testSubmit"
                         leftSection={<IconSend color="green" />}
                         ml={20}
                         mt={20}
@@ -631,6 +646,7 @@ const Display = (): JSX.Element => {
               <Button
                 c="var(--mantine-color-dark-0)"
                 color="var(--color-og107)"
+                data-testid="testAdd"
                 leftSection={<IconPlus color="green" />}
                 onClick={(): void => setIsAdding(true)}
                 variant="outline">

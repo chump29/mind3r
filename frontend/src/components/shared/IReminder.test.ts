@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 
-import { randFutureDate, randWord } from "@ngneat/falso"
+import { randFutureDate, randNoun, randVerb } from "@ngneat/falso"
 import { safeParse } from "valibot"
 
 import { type IReminder, ReminderSchema } from "./IReminder.ts"
@@ -9,9 +9,7 @@ describe("IReminder", (): void => {
   const reminder: IReminder = {
     date: randFutureDate().toISOString(),
     description: null,
-    event: randWord({
-      capitalize: true
-    }),
+    event: `${randVerb()} ${randNoun()}`,
     id: null
   } satisfies IReminder
 

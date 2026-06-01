@@ -9,7 +9,7 @@ import { createRoot } from "react-dom/client"
 import { nonEmpty, parseBoolean, pipe, safeParse, string, summarize } from "valibot"
 
 import { default as Display } from "./components/display/index.tsx"
-import { findElement, getURL, getVersion } from "./components/shared/index.ts"
+import { findElement, getVersion } from "./components/shared/index.ts"
 import { VersionSchema } from "./components/shared/schemas.ts"
 
 const d = safeParse(pipe(string(), nonEmpty(), parseBoolean()), import.meta.env.VITE_DEBUG)
@@ -31,12 +31,10 @@ if (DEBUG) {
 
 ;(await findElement("#frontend")).textContent = version
 
-const API_URL: string = await getURL()
-
 const obj: HTMLElement = await findElement("#backend")
 
 // * NOTE: not using await, don't hold up page render
-fetch(`${API_URL}/version`, {
+fetch(`${import.meta.env.VITE_API_URL}/version`, {
   signal: AbortSignal.timeout(ms("1s"))
 })
   .then(async (response: Response): Promise<string> => {

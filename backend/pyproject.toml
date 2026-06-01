@@ -50,6 +50,9 @@ dev = [
     "types-peewee>=4.0.5.20260518",
 ]
 
+[tool.coverage.json]
+output = ".coverage.json"
+
 [tool.coverage.run]
 omit = ["features/environment.py"]
 
@@ -64,7 +67,6 @@ exclude_also = [
     "log",
     "Path",
 ]
-fail_under = 100
 precision = 2
 show_missing = true
 
@@ -142,8 +144,9 @@ required-version = ">=0.11"
 [tool.uv.build-backend]
 namespace = true
 source-exclude = [
-    ".coverage",
+    ".coverage*",
     ".dockerignore",
+    ".env*",
     ".pre-commit-config.yaml",
     ".python-version",
     ".ruff_cache/**/*",

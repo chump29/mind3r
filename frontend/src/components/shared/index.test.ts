@@ -1,33 +1,13 @@
 import { describe, expect, type jest, spyOn, test } from "bun:test"
 
-import { GlobalRegistrator } from "@happy-dom/global-registrator"
-import { randFutureDate, randSemver, randWord } from "@ngneat/falso"
+import { randFutureDate, randNoun, randSemver, randVerb } from "@ngneat/falso"
 import { status } from "http-status"
+import { titleCase } from "title-case"
 
 import { type IReminder } from "./IReminder.ts"
-import { FetchError, findElement, getURL, getVersion, handleError, validate } from "./index.ts"
-
-GlobalRegistrator.register()
+import { FetchError, findElement, getVersion, handleError, validate } from "./index.ts"
 
 describe("index", (): void => {
-  test("getURL", (): void => {
-    const bak: string = import.meta.env.VITE_API_URL
-    process.env.VITE_API_URL = "http://test.me"
-
-    expect(getURL()).resolves.toBe(`${process.env.VITE_API_URL}/api`)
-
-    process.env.VITE_API_URL = bak
-  })
-
-  test("getURL - fail", (): void => {
-    const bak: string = import.meta.env.VITE_API_URL
-    process.env.VITE_API_URL = ""
-
-    expect(getURL()).resolves.toBeEmpty()
-
-    process.env.VITE_API_URL = bak
-  })
-
   test("findElement", async (): Promise<void> => {
     document.body.innerHTML = '<div id="test">test</div>'
 
@@ -56,21 +36,38 @@ describe("index", (): void => {
     {
       date: randFutureDate().toISOString(),
       description: null,
-      event: randWord({
-        capitalize: true
-      }),
+      event: `${randVerb()} ${randNoun()}`,
       id: null
     } satisfies IReminder
   ]
 
-  test("validate", (): void => {
+  // * NOTE: remapping because of case transformation on event title
+  const remap = <T>(obj: T): T => {
+    if (Array.isArray(obj)) {
+      return obj.map((reminder: IReminder): IReminder => {
+        return {
+          ...reminder,
+          event: titleCase(reminder.event)
+        }
+      }) as T
+    } else {
+      return {
+        ...obj,
+        event: titleCase((obj as IReminder).event)
+      } as T
+    }
+  }
+
+  test("validate", async (): Promise<void> => {
     const reminder: IReminder = reminders[0] as IReminder
 
-    expect(validate(reminder)).resolves.toEqual(reminders[0] as IReminder)
+    expect(validate<IReminder>(reminder)).resolves.toEqual(remap<IReminder>(reminder))
   })
 
-  test("validate - array", (): void => {
-    expect(validate(reminders)).resolves.toEqual(reminders)
+  test("validate - array", async (): Promise<void> => {
+    const validatedReminders: IReminder[] = await validate<IReminder[]>(reminders)
+
+    expect(validatedReminders).toEqual(remap<IReminder[]>(reminders))
   })
 
   test("validate - error", (): void => {

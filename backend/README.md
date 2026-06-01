@@ -12,7 +12,7 @@
 ![Pydantic](https://img.shields.io/badge/Pydantic->=2.13.4-informational?style=plastic&logo=pydantic "Pydantic") &nbsp;
 ![uv](https://img.shields.io/badge/uv->=0.11-informational?style=plastic&logo=uv "uv")
 
-![Coverage](https://img.shields.io/badge/Coverage-100%25-success?style=plastic "Coverage")
+![Coverage](https://img.shields.io/badge/Coverage-69.44%25-success?style=plastic "Coverage")
 
 ---
 

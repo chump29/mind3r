@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 
-import { randCatchPhrase, randNumber, randSemver, randSoonDate, randText, randUrl, randWord } from "@ngneat/falso"
-import dayjs from "dayjs"
+import { randCatchPhrase, randNoun, randNumber, randSemver, randSoonDate, randText, randVerb } from "@ngneat/falso"
+import { default as dayjs } from "dayjs"
 import { safeParse } from "valibot"
 
 import {
@@ -11,7 +11,6 @@ import {
   IdSchema,
   MAX_LEN_DESCRIPTION,
   MAX_LEN_EVENT,
-  UrlSchema,
   VersionSchema
 } from "./schemas.ts"
 
@@ -27,17 +26,6 @@ describe("schema", (): void => {
     expect(v.issues?.[0].message).toInclude("Invalid SemVer")
   })
 
-  test("UrlSchema", (): void => {
-    expect(safeParse(UrlSchema, randUrl()).success).toBeTrue()
-  })
-
-  test("UrlSchema - fail", (): void => {
-    const u = safeParse(UrlSchema, "not_a_url")
-
-    expect(u.success).toBeFalse()
-    expect(u.issues?.[0].message).toInclude("Invalid URL")
-  })
-
   test("DateTimeSchema", (): void => {
     expect(safeParse(DateTimeSchema, randSoonDate().toISOString()).success).toBeTrue()
   })
@@ -51,14 +39,7 @@ describe("schema", (): void => {
   })
 
   test("EventSchema", (): void => {
-    expect(
-      safeParse(
-        EventSchema,
-        randWord({
-          capitalize: true
-        })
-      ).success
-    ).toBeTrue()
+    expect(safeParse(EventSchema, `${randVerb()} ${randNoun()}`).success).toBeTrue()
   })
 
   test("EventSchema - fail", (): void => {

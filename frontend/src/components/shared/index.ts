@@ -3,26 +3,6 @@ import { error } from "@postfmly/logger"
 import { array, safeParse, summarize } from "valibot"
 
 import { type IReminder, ReminderSchema } from "./IReminder.ts"
-import { UrlSchema } from "./schemas.ts"
-
-/**
- * Parses VITE_API_URL
- * @async
- * @function
- * @returns {Promise<string>} API URL, or empty string if not found
- */
-const getURL = async (): Promise<string> => {
-  let API_URL: string = "/api"
-  if (import.meta.env.DEV) {
-    const u = safeParse(UrlSchema, import.meta.env.VITE_API_URL)
-    if (u.success) {
-      API_URL = `${u.output}${API_URL}`
-    } else {
-      API_URL = ""
-    }
-  }
-  return API_URL
-}
 
 /**
  * Finds DOM element
@@ -55,16 +35,16 @@ const getVersion = async (version: string | undefined): Promise<string> => {
  * Validates {@link IReminder} object or array
  * @async
  * @function
- * @param {T} reminder Reminder object or array
- * @returns {T} Validated Reminder object or array
+ * @param {T} obj IReminder object or array
+ * @returns {T} Validated IReminder object or array
  * @throws {Error} If validation fails
  */
-const validate = async <T>(reminder: T): Promise<T> => {
+const validate = async <T>(obj: T): Promise<T> => {
   let r
-  if (Array.isArray(reminder)) {
-    r = safeParse(array(ReminderSchema), reminder)
+  if (Array.isArray(obj)) {
+    r = safeParse(array(ReminderSchema), obj)
   } else {
-    r = safeParse(ReminderSchema, reminder)
+    r = safeParse(ReminderSchema, obj)
   }
 
   if (!r.success) {
@@ -137,4 +117,4 @@ const SortOrder = Object.freeze({
  */
 type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
-export { FetchError, findElement, getURL, getVersion, handleError, SortBy, SortOrder, validate }
+export { FetchError, findElement, getVersion, handleError, SortBy, SortOrder, validate }

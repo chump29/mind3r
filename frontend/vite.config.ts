@@ -6,6 +6,7 @@ import { default as browserslist } from "browserslist"
 import { default as getDirSize } from "fdir-size"
 import { browserslistToTargets } from "lightningcss"
 import { default as prettyBytes } from "pretty-bytes"
+import { default as removeAttributes } from "rollup-plugin-jsx-remove-attributes"
 import { defineConfig } from "vite"
 import { ViteMinifyPlugin as minifyHTML } from "vite-plugin-minify"
 import { default as version } from "vite-plugin-package-version"
@@ -48,6 +49,9 @@ export default defineConfig({
       removeComments: true
     }),
     react(),
+    removeAttributes({
+      usage: "vite"
+    }),
     tailwindCSS(),
     version(),
     webFontDownload(

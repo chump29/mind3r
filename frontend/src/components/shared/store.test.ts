@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 
-import { rand, randBoolean, randSoonDate, randWord } from "@ngneat/falso"
+import { rand, randBoolean, randNoun, randSoonDate, randVerb, randWord } from "@ngneat/falso"
 
 import { type IReminder } from "./IReminder.ts"
 import { SortBy, SortOrder } from "./index.ts"
@@ -11,9 +11,7 @@ describe("store", (): void => {
     {
       date: randSoonDate().toISOString(),
       description: null,
-      event: randWord({
-        capitalize: true
-      }),
+      event: `${randVerb()} ${randNoun()}`,
       id: null
     } satisfies IReminder
   ]

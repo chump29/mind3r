@@ -14,10 +14,8 @@ import {
   number,
   pipe,
   string,
-  toLowerCase,
   transform,
-  trim,
-  url
+  trim
 } from "valibot"
 
 dayjs.extend(utc)
@@ -36,13 +34,6 @@ const VersionSchema = pipe(
     (e: CheckIssue<string>): string => `Invalid SemVer: ${e.input}`
   )
 )
-
-/**
- * Validates a URL
- * @constant
- * @summary non-empty string, valid URL
- */
-const UrlSchema = pipe(string(), nonEmpty(), toLowerCase(), url())
 
 /**
  * Maximum description length
@@ -123,6 +114,5 @@ export {
   IdSchema,
   MAX_LEN_DESCRIPTION,
   MAX_LEN_EVENT,
-  UrlSchema,
   VersionSchema
 }

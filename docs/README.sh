@@ -97,6 +97,13 @@ for _env in frontend backend; do
     export _uv
     echo -e " • uv: $_uv"
 
+    _coverage=-1
+    if [ -f ".coverage.json" ]; then
+      _coverage=$(jq -r .totals.percent_statements_covered_display .coverage.json)
+    fi
+    export _coverage
+    echo -e "\n☂️  Coverage: $_coverage%"
+
     sed -i "/MD060/d" ../backend/README.md
   fi
 
@@ -107,7 +114,7 @@ for _env in frontend backend; do
   envsubst < README-$_env.template.md > ../$_env/README.md
 done
 
-echo -e "\n🛠️  Creating README.md...\n"
+echo -e "🛠️  Creating README.md...\n"
 
 envsubst < README.template.md > ../README.md
 
