@@ -9,7 +9,7 @@ import { createRoot } from "react-dom/client"
 import { nonEmpty, parseBoolean, pipe, safeParse, string, summarize } from "valibot"
 
 import { default as Display } from "./components/display/index.tsx"
-import { findElement, getUrl, getVersion } from "./components/shared/index.ts"
+import { findElement, getURL, getVersion } from "./components/shared/index.ts"
 import { VersionSchema } from "./components/shared/schemas.ts"
 
 const d = safeParse(pipe(string(), nonEmpty(), parseBoolean()), import.meta.env.VITE_DEBUG)
@@ -31,7 +31,7 @@ if (DEBUG) {
 
 ;(await findElement("#frontend")).textContent = version
 
-const API_URL: string = await getUrl()
+const API_URL: string = await getURL()
 
 const obj: HTMLElement = await findElement("#backend")
 
@@ -65,7 +65,7 @@ fetch(`${API_URL}/version`, {
   })
   .catch((e: unknown): void => {
     obj.textContent = "N/A"
-    if (e instanceof Error && (e as Error).name === "TimeoutError") {
+    if (e instanceof Error && (e satisfies Error).name === "TimeoutError") {
       error("Timed out getting API version")
     } else {
       error(e)

@@ -7,7 +7,6 @@ import {
   check,
   gtValue,
   integer,
-  isoTimestamp,
   maxLength,
   minValue,
   nonEmpty,
@@ -78,7 +77,6 @@ const DateTimeSchema = pipe(
   string(),
   nonEmpty("This field is required"),
   transform((s: string): string => dayjs(s).utc().toISOString()),
-  isoTimestamp(),
   minValue(dayjs().add(1, "m").toISOString(), "Must be greater than the current date/time")
 )
 

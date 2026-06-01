@@ -39,7 +39,7 @@ import { default as useSWR } from "swr/immutable"
 import { nonEmpty, parseBoolean, pipe, safeParse, string } from "valibot"
 
 import { type IReminder } from "../shared/IReminder.ts"
-import { FetchError, getUrl, handleError, SortBy, SortOrder, validate } from "../shared/index.ts"
+import { FetchError, getURL, handleError, SortBy, SortOrder, validate } from "../shared/index.ts"
 import {
   DATETIME_FORMAT,
   DateTimeSchema,
@@ -70,7 +70,7 @@ if (DEBUG) {
   info("Debug is ON")
 }
 
-const API_URL: string = await getUrl()
+const API_URL: string = await getURL()
 const API_TIMEOUT: number = ms("3s")
 
 const Th = ({
@@ -354,7 +354,7 @@ const Display = (): JSX.Element => {
         })
         .then(async (reminder: IReminder): Promise<void> => {
           if (!reminder) {
-            throw new Error(`Could not update reminder ID ${(editing as IReminder).id}`)
+            throw new Error(`Could not update reminder ID ${(editing satisfies IReminder).id}`)
           }
 
           await validate<IReminder>(reminder)

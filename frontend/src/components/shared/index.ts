@@ -10,9 +10,8 @@ import { UrlSchema } from "./schemas.ts"
  * @async
  * @function
  * @returns {Promise<string>} API URL, or empty string if not found
- * @see {@link getUrlRaw}
  */
-const getUrl = async (): Promise<string> => {
+const getURL = async (): Promise<string> => {
   let API_URL: string = "/api"
   if (import.meta.env.DEV) {
     const u = safeParse(UrlSchema, import.meta.env.VITE_API_URL)
@@ -109,10 +108,10 @@ const handleError = (e: Error): void => {
  * @constant
  * @summary DATE | EVENT
  */
-const SortBy = {
+const SortBy = Object.freeze({
   DATE: "date",
   EVENT: "event"
-} as const
+})
 
 /**
  * Column sort by types
@@ -126,10 +125,10 @@ type SortBy = (typeof SortBy)[keyof typeof SortBy]
  * @constant
  * @summary ASC | DESC
  */
-const SortOrder = {
+const SortOrder = Object.freeze({
   ASC: "asc",
   DESC: "desc"
-} as const
+})
 
 /**
  * Column sort order types
@@ -138,4 +137,4 @@ const SortOrder = {
  */
 type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
-export { FetchError, findElement, getUrl, getVersion, handleError, SortBy, SortOrder, validate }
+export { FetchError, findElement, getURL, getVersion, handleError, SortBy, SortOrder, validate }
