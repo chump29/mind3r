@@ -90,7 +90,7 @@ const Th = ({
 
   return (
     <Table.Th p={0} ta="center">
-      <Tooltip label={`Sort by ${label}`}>
+      <Tooltip label={`Sort by ${label}`} withArrow>
         <UnstyledButton onClick={onSort}>
           <Group justify="space-between">
             <Text fw="bold">{children}</Text>
@@ -445,7 +445,7 @@ const Display = (): JSX.Element => {
             {row.description}
           </Table.Td>
           <Table.Td ta="center" w={100}>
-            <Tooltip label="Edit">
+            <Tooltip label="Edit" withArrow>
               <ActionIcon
                 color="var(--color-og107)"
                 data-testid={`testEdit-${row.id}`}
@@ -454,7 +454,7 @@ const Display = (): JSX.Element => {
                 <IconPencil color="yellow" size={16} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Delete">
+            <Tooltip label="Delete" withArrow>
               <ActionIcon
                 color="var(--color-og107)"
                 data-testid={`testDelete-${row.id}`}
@@ -487,7 +487,7 @@ const Display = (): JSX.Element => {
             onChange={(e: ChangeEvent<HTMLInputElement>): void => filterAndSort(e.currentTarget.value)}
             placeholder="Search by Event or Description..."
             rightSection={
-              <Tooltip label="Clear">
+              <Tooltip label="Clear" withArrow>
                 <IconX
                   color="red"
                   onClick={(): void => filterAndSort()}
@@ -556,7 +556,7 @@ const Display = (): JSX.Element => {
         <Box mt={20} ta="center">
           {isAdding ? (
             <>
-              <Tooltip label="Cancel">
+              <Tooltip label="Cancel" withArrow>
                 <Button
                   c="var(--mantine-color-dark-0)"
                   color="var(--color-og107)"
@@ -624,7 +624,7 @@ const Display = (): JSX.Element => {
                       value={form.values.description ?? ""}
                       w={300}
                     />
-                    <Tooltip label="Submit">
+                    <Tooltip label="Submit" withArrow>
                       <Button
                         c="var(--mantine-color-dark-0)"
                         color="var(--color-og107)"
@@ -642,7 +642,7 @@ const Display = (): JSX.Element => {
               </Box>
             </>
           ) : (
-            <Tooltip label="Add Event">
+            <Tooltip label="Add Event" withArrow>
               <Button
                 c="var(--mantine-color-dark-0)"
                 color="var(--color-og107)"

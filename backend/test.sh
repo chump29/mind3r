@@ -1,5 +1,7 @@
 #!/usr/bin/env -S bash -e
 
+export DB_FILE=mind3r_test.db
+
 rm -f .coverage* && \
 uv run coverage run --module behave --stop && \
 echo && \

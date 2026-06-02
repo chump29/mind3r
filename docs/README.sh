@@ -98,14 +98,13 @@ for _env in frontend backend; do
       docker context use nova > /dev/null 2>&1
     fi
     if [ "$(docker ps -q -f name="$_name")" ]; then
-      _sqlite=$(docker exec "$_name" apk list sqlite | cut -d " " -f 1)
+      _sqlite=$(docker exec "$_name" apk list --no-cache sqlite | cut -d " " -f 1)
       _sqlite=${_sqlite:7:-3}
     else
       _sqlite=3.49.2
       _static="*"
     fi
     docker context use default > /dev/null 2>&1
-
     export _sqlite
     echo -e " • SQLite: $_sqlite$_static"
 

@@ -76,9 +76,11 @@ export default defineConfig({
           )
           .then(async (files: string[]): Promise<void> => {
             for await (const file of files) {
+              const cat: string = "♡ ᓚᘏᗢ ♡"
+              const footer: string = file.endsWith(".html") ? `<!-- ${cat} -->` : `/* ${cat} */`
               await appendFile(
                 `dist/${file}`,
-                `${(await Bun.file(`dist/${file}`).text()).endsWith("\n") ? "" : "\n"}/* ♡ ᓚᘏᗢ ♡ */`
+                `${(await Bun.file(`dist/${file}`).text()).endsWith("\n") ? "" : "\n"}${footer}`
               )
             }
           })
