@@ -34,7 +34,7 @@ LABEL org.opencontainers.image.authors="Chris Post <admin@postfmly.com>" \
     org.opencontainers.image.url="https://github.com/chump29/mind3r"
 
 # hadolint ignore=DL3018
-RUN apk add --no-cache tzdata
+RUN apk add --no-cache tzdata sqlite
 
 WORKDIR /backend
 

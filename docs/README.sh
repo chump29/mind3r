@@ -7,7 +7,7 @@ export _frontendPort=94
 export _backendPort=5559
 
 getVersion() {
-  echo ">=$(echo "$1" | cut -d'=' -f2)"
+  echo ">=$(echo "$1" | cut -d '=' -f 2)"
 }
 
 clear
@@ -92,6 +92,22 @@ for _env in frontend backend; do
     fi
     export _pydantic
     echo -e " • pydantic: $_pydantic"
+
+    _name=$(jq -r .name ../frontend/package.json)
+    if [[ "$HOSTNAME" == "guru" ]]; then
+      docker context use nova > /dev/null 2>&1
+    fi
+    if [ "$(docker ps -q -f name="$_name")" ]; then
+      _sqlite=$(docker exec "$_name" apk list sqlite | cut -d " " -f 1)
+      _sqlite=${_sqlite:7:-3}
+    else
+      _sqlite=3.49.2
+      _static="*"
+    fi
+    docker context use default > /dev/null 2>&1
+
+    export _sqlite
+    echo -e " • SQLite: $_sqlite$_static"
 
     _uv=$(yq '.tool.uv.required-version // "❓"' pyproject.toml)
     export _uv
