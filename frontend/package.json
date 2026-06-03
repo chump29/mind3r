@@ -20,11 +20,11 @@
   "module": "index.ts",
   "scripts": {
     "build": "bunx --bun vite build",
-    "build:dev": "bunx --bun vite",
     "clean": "rimraf bun.lock ../.vscode dist",
     "clean:coverage": "rimraf coverage",
+    "dev": "bunx --bun vite",
     "preinstall": "bunx only-allow bun",
-    "postinstall": "link-configs",
+    "postinstall": "link-configs && bun audit",
     "lint": "bun run lint:spell && bun run lint:biome && bun run lint:css && bun run lint:env && bun run lint:html",
     "lint:biome": "biome check --write --verbose",
     "lint:biome:ci": "biome ci --verbose --reporter=default --reporter=github",
@@ -36,7 +36,7 @@
     "lint:spell": "cspell --dot --verbose .",
     "lint:spell:ci": "cspell --dot --verbose --config ./node_modules/@postfmly/config/.vscode/cspell.json .",
     "prepare": "cd .. && husky frontend/.husky",
-    "serve": "cd dist && bunx --bun serve",
+    "prod": "bun run build && cd dist && bunx serve",
     "test": "bun run clean:coverage && bun test --coverage --isolate --coverage-reporter=text --coverage-reporter=lcov --preload ./src/dom-setup.ts --preload ./src/setup.ts"
   },
   "lint-staged": {
@@ -91,7 +91,6 @@
     "@types/semver": "^7.7.1",
     "@vitejs/plugin-react": "^6.0.2",
     "browserslist": "^4.28.2",
-    "bun-scan": "^1.1.2",
     "cspell": "^10.0.1",
     "fdir-size": "^1.0.3",
     "html-validate": "^11.5.0",

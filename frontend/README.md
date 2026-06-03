@@ -92,8 +92,9 @@ port@{shape: brace, label: "&nbsp; Nginx exposes port 80"}
 |    Lint ENV    |  `bun run lint:env`  |   `bun lint:env`   |
 |   Lint HTML    | `bun run lint:html`  |  `bun lint:html`   |
 | Lint Spelling  | `bun run lint:spell` |  `bun lint:spell`  |
-|    Run DEV     | `bun run build:dev`  |  `bun build:dev`   |
-|    Run PROD    |   `bun run build`    |      &mdash;       |
+|    Run DEV     |    `bun run dev`     |     `bun dev`      |
+| Build/Run PROD |    `bun run prod`    |     `bun prod`     |
+|   Build PROD   |   `bun run build`    |      &mdash;       |
 |      Test      |    `bun run test`    |      &mdash;       |
 
 #### Docker Deployment:

@@ -43,10 +43,12 @@ const newData: IReminder = {
 beforeAll((): void => {
   setPassthrough(false)
 
+  const API_URL: string = `${import.meta.env.VITE_API_URL || ""}/api`
+
   mockFetch(
     {
       method: httpMethods.GET,
-      url: `${import.meta.env.VITE_API_URL}/get`
+      url: `${API_URL}/get`
     },
     () => Response.json(data)
   )
@@ -54,7 +56,7 @@ beforeAll((): void => {
   mockFetch(
     {
       method: httpMethods.POST,
-      url: `${import.meta.env.VITE_API_URL}/add`
+      url: `${API_URL}/add`
     },
     json(newData)
   )
@@ -62,7 +64,7 @@ beforeAll((): void => {
   mockFetch(
     {
       method: httpMethods.PUT,
-      url: `${import.meta.env.VITE_API_URL}/update/1`
+      url: `${API_URL}/update/1`
     },
     json(newData)
   )
@@ -70,7 +72,7 @@ beforeAll((): void => {
   mockFetch(
     {
       method: httpMethods.DELETE,
-      url: `${import.meta.env.VITE_API_URL}/delete/1`
+      url: `${API_URL}/delete/1`
     },
     json(true)
   )

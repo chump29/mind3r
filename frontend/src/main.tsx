@@ -33,8 +33,10 @@ if (DEBUG) {
 
 const obj: HTMLElement = await findElement("#backend")
 
+const API_URL: string = `${import.meta.env.VITE_API_URL || ""}/api`
+
 // * NOTE: not using await, don't hold up page render
-fetch(`${import.meta.env.VITE_API_URL}/version`, {
+fetch(`${API_URL}/version`, {
   signal: AbortSignal.timeout(ms("1s"))
 })
   .then(async (response: Response): Promise<string> => {

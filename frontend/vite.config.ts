@@ -14,28 +14,9 @@ import { ViteWebfontDownload as webFontDownload } from "vite-plugin-webfont-dl"
 
 export default defineConfig({
   build: {
+    chunkSizeWarningLimit: 600,
     cssMinify: "lightningcss",
-    target: "esnext",
-    rolldownOptions: {
-      output: {
-        codeSplitting: {
-          groups: [
-            {
-              name: "mantine",
-              test: "mantine"
-            },
-            {
-              name: "react",
-              test: "react"
-            },
-            {
-              name: "node",
-              test: "node_modules"
-            }
-          ]
-        }
-      }
-    }
+    target: "esnext"
   },
   css: {
     lightningcss: {

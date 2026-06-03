@@ -70,7 +70,7 @@ if (DEBUG) {
   info("Debug is ON")
 }
 
-const API_URL: string = import.meta.env.VITE_API_URL
+const API_URL: string = `${import.meta.env.VITE_API_URL || ""}/api`
 const API_TIMEOUT: number = ms("3s")
 
 const Th = ({
