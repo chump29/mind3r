@@ -34,3 +34,8 @@ Feature: Get all reminders
 			Then /add should fail
 				And /update should fail
 				And /delete should fail
+
+	Scenario: Stringify a ReminderDTO
+		Given that a ReminderDTO should stringify
+			When a ReminderDTO is output
+			Then ReminderDTO should be a string

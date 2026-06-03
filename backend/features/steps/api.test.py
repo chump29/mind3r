@@ -173,3 +173,22 @@ def update_fail(context: Context) -> None:
 def delete_fail(context: Context) -> None:
     """/delete should fail"""
     assert not context.bad_delete, "/delete should fail"
+
+
+@given("that a ReminderDTO should stringify")
+def stringify_reminder_dto(_: Context) -> None:
+    """Stringify a ReminderDTO"""
+
+
+@when("a ReminderDTO is output")
+def output_reminder_dto(context: Context) -> None:
+    """Output a ReminderDTO"""
+    context.reminder_dto = str(ReminderDTO(date=datetime.now(tz=UTC), event="REMINDER_DTO"))
+    assert not context.failed, "Unable to stringify ReminderDTO"
+
+
+@then("ReminderDTO should be a string")
+def reminder_dto_string(context: Context) -> None:
+    """ReminderDTO should be a string"""
+    assert context.reminder_dto, "Invalid ReminderDTO string"
+    assert isinstance(context.reminder_dto, str), "Invalid ReminderDTO type"
