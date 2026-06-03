@@ -60,7 +60,7 @@ CONSOLE: Final[Console] = Console()
 catch_exceptions()
 
 
-def shutdown(sig: int, _: FrameType | None) -> None:
+def shutdown(sig: int, _: FrameType | None = None) -> None:
     """Close database"""
     if DEBUG:
         CONSOLE.print(f"\n❌ {Signals(sig).name } detected")
@@ -89,6 +89,10 @@ class ReminderDTO(BaseModel):
     description: StrictStr | None = Field(max_length=MAX_LEN_DESCRIPTION, default=None)
 
     model_config = ConfigDict(extra="forbid")
+
+    def __str__(self) -> str:
+        """Show DTO data"""
+        return f"id={self.id}, date={self.date}, event={self.event}, description={self.description}"
 
 
 class Reminder(Model):
@@ -134,8 +138,8 @@ ROUTER: Final[APIRouter] = APIRouter(prefix="/api")
 type Json = int | float | None | dict[str, Json] | list[Json]
 
 
-@ROUTER.get("/cache")
-def get_cache_stats() -> Json | None:
+@ROUTER.get("/cache", response_model=Json)
+def get_cache_stats() -> Json:
     """Get cache stats"""
     try:
 
@@ -169,7 +173,7 @@ def delete_expired() -> None:
         CONSOLE.print_exception()
 
 
-@ROUTER.get("/version")
+@ROUTER.get("/version", response_model=str)
 @cached(cache=LRUCache(maxsize=1), info=True)
 def get_version() -> str | None:
     """Get version"""
@@ -221,9 +225,11 @@ def get_one_reminder(pk: int) -> ReminderDTO | None:
 
 def sanitize(reminder: ReminderDTO) -> ReminderDTO | None:
     """Sanitize input"""
+    if not reminder.event:
+        return None
     reminder.event = clean(reminder.event, tags=set())
     reminder.description = clean(reminder.description, tags=set()) if reminder.description else None
-    return None if not reminder.event else reminder
+    return reminder
 
 
 @ROUTER.post("/add", response_model=ReminderDTO | None)
@@ -237,10 +243,7 @@ def add_reminder(reminder: ReminderDTO) -> ReminderDTO | None:
         r.description = r.description.replace("&amp;", "&")
     try:
         if DEBUG:
-            log(
-                "Adding reminder",
-                f"date={r.date}, event={r.event}, description={r.description}",
-            )
+            log("Adding reminder", str(r))
         event: Final[Reminder] = Reminder.create(date=r.date, event=r.event, description=r.description)
         get_all_reminders.cache_clear()
         return ReminderDTO.model_validate(model_to_dict(event))
@@ -260,7 +263,7 @@ def update_reminder(pk: int, reminder: ReminderDTO) -> ReminderDTO | None:
         r.description = r.description.replace("&amp;", "&")
     try:
         if DEBUG:
-            log("Updating reminder ID", str(pk))
+            log("Updating reminder", str(r))
         get_all_reminders.cache_clear()
         return (
             get_one_reminder(pk)
@@ -273,18 +276,20 @@ def update_reminder(pk: int, reminder: ReminderDTO) -> ReminderDTO | None:
         return None
 
 
-@ROUTER.delete("/delete/{pk}")
+@ROUTER.delete("/delete/{pk}", response_model=bool)
 def delete_reminder(pk: int) -> bool:
     """Delete reminder by ID"""
     try:
-        if DEBUG:
-            log("Deleting reminder ID", str(pk))
         reminder: Final[Reminder | None] = Reminder.get_or_none(Reminder.id == pk)
         if reminder:
             get_all_reminders.cache_clear()
             reminder.delete_instance()
         else:
+            if DEBUG:
+                log("Could not delete ID", str(pk))
             return False
+        if DEBUG:
+            log("Deleting reminder ID", str(pk))
     except Exception:  # pylint: disable=broad-exception-caught
         CONSOLE.print_exception()
         return False
