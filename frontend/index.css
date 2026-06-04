@@ -8,6 +8,7 @@ oklch: https://oklch.com/
 */
 
 @theme {
-  --font-title: "Noto Sans Display", sans-serif;
+  --font-title: "Noto Sans", sans-serif;
   --color-og107: oklch(44.32% 0.0271 135.14deg); /* 4d5748, Verdant Hush */
+  --color-mantine-white: oklch(88.03% 0.0125 276.08deg); /* d5d7e0, Skyscraper, mantine dark0 */
 }

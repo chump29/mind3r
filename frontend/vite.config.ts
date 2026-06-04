@@ -37,7 +37,7 @@ export default defineConfig({
     version(),
     webFontDownload(
       [
-        "https://fonts.googleapis.com/css2?family=Noto+Sans+Display&display=swap"
+        "https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap"
       ],
       {
         assetsSubfolder: "fonts",
