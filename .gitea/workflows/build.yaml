@@ -47,6 +47,7 @@ jobs:
         run: bun run test
 
   check-backend:
+    needs: [check-frontend]
     runs-on: amd64
     defaults:
       run:
