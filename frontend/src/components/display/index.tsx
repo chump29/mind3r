@@ -68,6 +68,7 @@ import {
 
 import "@mantine/core/styles.layer.css"
 import "@mantine/dates/styles.layer.css"
+import { type IUser, vUserSchema } from "../shared/IUser.ts"
 
 dayjs.extend(advancedFormat)
 
@@ -164,8 +165,16 @@ const Display = (): JSX.Element => {
   }
 
   const fetchData = async (url: string): Promise<IReminder[]> => {
+    const userObj: IUser = {
+      user: user
+    } satisfies IUser
+    const u = safeParse(vUserSchema, userObj)
+    if (!u.success) {
+      throw new Error("Invalid user")
+    }
+
     return await fetch(url, {
-      body: user,
+      body: JSON.stringify(u.output),
       method: httpMethods.POST,
       signal: AbortSignal.timeout(API_TIMEOUT)
     })
