@@ -4,6 +4,7 @@
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from hashlib import sha256
 from os import getenv, getpid, kill
 from pathlib import Path
 from signal import SIGINT, SIGKILL, SIGTERM, Signals, signal
@@ -11,30 +12,14 @@ from tomllib import load
 from typing import TYPE_CHECKING, Final
 
 from box import Box
-from cachetools import (
-    LRUCache,
-    _CacheInfo,
-    cached,
-)
+from cachetools import LRUCache, _CacheInfo, cached
 from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI
 from nh3 import clean  # pylint: disable=no-name-in-module
-from peewee import (
-    AutoField,
-    CharField,
-    DateTimeField,
-    Model,
-    SqliteDatabase,
-)
+from peewee import AutoField, CharField, DateTimeField, Model, SqliteDatabase
 from playhouse.shortcuts import model_to_dict
 from pluralizer import Pluralizer
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Field,
-    PositiveInt,
-    StrictStr,
-)
+from pydantic import BaseModel, ConfigDict, Field, PositiveInt, StrictStr
 from rich.console import Console
 from rich.traceback import install as catch_exceptions
 from semver import Version
@@ -74,10 +59,28 @@ def shutdown(sig: int, _: FrameType | None = None) -> None:
 signal(SIGINT, shutdown)
 signal(SIGTERM, shutdown)
 
-MAX_LEN_DESCRIPTION: Final[int] = 255
+MAX_LEN: Final[int] = 255
 MAX_LEN_EVENT: Final[int] = 50
+MAX_LEN_USER: Final[int] = 64
 
 pluralizer: Final[Pluralizer] = Pluralizer()
+
+
+class UserDTO(BaseModel):
+    """User domain model"""
+
+    user: StrictStr = Field(max_length=MAX_LEN)
+
+    model_config = ConfigDict(extra="forbid")
+
+    def __hash__(self: UserDTO) -> int:
+        """Make hashable for caching"""
+        return hash(self.user)
+
+
+def shorten(user: str) -> str:
+    """Return shortened SHA-256 string"""
+    return user[:7]
 
 
 class ReminderDTO(BaseModel):
@@ -86,13 +89,17 @@ class ReminderDTO(BaseModel):
     id: PositiveInt | None = Field(strict=True, default=None)
     date: datetime
     event: StrictStr = Field(max_length=MAX_LEN_EVENT)
-    description: StrictStr | None = Field(max_length=MAX_LEN_DESCRIPTION, default=None)
+    description: StrictStr | None = Field(max_length=MAX_LEN, default=None)
+    user: StrictStr = Field(max_length=MAX_LEN)
 
     model_config = ConfigDict(extra="forbid")
 
-    def __str__(self) -> str:
-        """Show DTO data"""
-        return f"id={self.id}, date={self.date}, event={self.event}, description={self.description}"
+    def __str__(self: ReminderDTO) -> str:
+        """Show ReminderDTO data"""
+        return (
+            f"id={self.id}, date={self.date}, event={self.event}, "
+            f"description={self.description}, user={shorten(self.user)}"
+        )
 
 
 class Reminder(Model):
@@ -101,7 +108,8 @@ class Reminder(Model):
     id: AutoField = AutoField()
     date: DateTimeField = DateTimeField()
     event: CharField = CharField(max_length=MAX_LEN_EVENT)
-    description: CharField = CharField(max_length=MAX_LEN_DESCRIPTION, null=True)
+    description: CharField = CharField(max_length=MAX_LEN, null=True)
+    user: CharField = CharField(max_length=MAX_LEN_USER)
 
     @dataclass
     class Meta:
@@ -161,14 +169,16 @@ def get_cache_stats() -> Json:
         return None
 
 
-def delete_expired() -> None:
+def delete_expired(user: str) -> None:
     """Delete expired reminders"""
     try:
-        count: Final[int] = Reminder.delete().where(datetime.now(UTC) >= Reminder.date).execute()
+        count: Final[int] = (
+            Reminder.delete().where(Reminder.user == user).where(datetime.now(UTC) >= Reminder.date).execute()
+        )
         if count > 0:
             get_all_reminders.cache_clear()
             if DEBUG:
-                log(f"Deleted {pluralizer.pluralize('expired reminder', count, True)}")
+                log(f"Deleted {pluralizer.pluralize('expired reminder', count, True)} for {shorten(user)}")
     except Exception:  # pylint: disable=broad-exception-caught
         CONSOLE.print_exception()
 
@@ -196,16 +206,26 @@ def get_version() -> str | None:
         return None
 
 
-@ROUTER.get("/get", response_model=list[ReminderDTO])
+def get_user_hash(user: str) -> str:
+    """Get user hash"""
+    return sha256(user.encode()).hexdigest()
+
+
+@ROUTER.post("/get", response_model=list[ReminderDTO])
 @cached(cache=LRUCache(maxsize=1), info=True)
-def get_all_reminders() -> list[ReminderDTO] | None:
+def get_all_reminders(user: UserDTO) -> list[ReminderDTO] | None:
     """Get all reminders"""
+    if not user or not user.user:
+        return None
     try:
-        delete_expired()
+        user_hash: Final[str] = get_user_hash(user.user)
+        delete_expired(user_hash)
+        count: Final[int] = Reminder.select().where(Reminder.user == user_hash).count(None)
+        if count == 0:
+            return None
         if DEBUG:
-            count: Final[int] = Reminder.select().count(None)
-            log(f"Getting {pluralizer.pluralize('reminder', count, True)}")
-        return list(Reminder.select().order_by(Reminder.date.asc()).dicts())
+            log(f"Getting {pluralizer.pluralize('reminder', count, True)} for {shorten(user_hash)}")
+        return list(Reminder.select().where(Reminder.user == user_hash).order_by(Reminder.date.asc()).dicts())
     except Exception:  # pylint: disable=broad-exception-caught
         CONSOLE.print_exception()
         return None
@@ -225,10 +245,13 @@ def get_one_reminder(pk: int) -> ReminderDTO | None:
 
 def sanitize(reminder: ReminderDTO) -> ReminderDTO | None:
     """Sanitize input"""
-    if not reminder.event:
+    if not reminder.event or not reminder.user:
         return None
-    reminder.event = clean(reminder.event, tags=set())
-    reminder.description = clean(reminder.description, tags=set()) if reminder.description else None
+    reminder.event = clean(reminder.event, tags=set()).replace("&amp;", "&")
+    reminder.description = (
+        clean(reminder.description, tags=set()).replace("&amp;", "&") if reminder.description else None
+    )
+    reminder.user = clean(reminder.user, tags=set()).replace("&amp;", "&")
     return reminder
 
 
@@ -238,13 +261,11 @@ def add_reminder(reminder: ReminderDTO) -> ReminderDTO | None:
     r: Final[ReminderDTO | None] = sanitize(reminder)
     if not r:
         return None
-    r.event = r.event.replace("&amp;", "&")
-    if r.description:
-        r.description = r.description.replace("&amp;", "&")
+    r.user = get_user_hash(r.user)
     try:
         if DEBUG:
             log("Adding reminder", str(r))
-        event: Final[Reminder] = Reminder.create(date=r.date, event=r.event, description=r.description)
+        event: Final[Reminder] = Reminder.create(date=r.date, event=r.event, description=r.description, user=r.user)
         get_all_reminders.cache_clear()
         return ReminderDTO.model_validate(model_to_dict(event))
     except Exception:  # pylint: disable=broad-exception-caught
@@ -258,9 +279,6 @@ def update_reminder(pk: int, reminder: ReminderDTO) -> ReminderDTO | None:
     r: Final[ReminderDTO | None] = sanitize(reminder)
     if not r:
         return None
-    r.event = r.event.replace("&amp;", "&")
-    if r.description:
-        r.description = r.description.replace("&amp;", "&")
     try:
         if DEBUG:
             log("Updating reminder", str(r))

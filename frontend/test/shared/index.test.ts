@@ -1,11 +1,12 @@
 import { describe, expect, type jest, spyOn, test } from "bun:test"
 
-import { randFutureDate, randNoun, randSemver, randVerb } from "@ngneat/falso"
+import { fakerEN_US as fake } from "@faker-js/faker"
 import { status } from "http-status"
 import { titleCase } from "title-case"
 
-import { type IReminder } from "./IReminder.ts"
-import { FetchError, findElement, getVersion, handleError, validate } from "./index.ts"
+import { type IReminder } from "../../src/components/shared/IReminder.ts"
+import { FetchError, findElement, getVersion, handleError, validate } from "../../src/components/shared/index.ts"
+import { generateReminder, generateReminders } from "../helpers.ts"
 
 describe("index", (): void => {
   test("findElement", async (): Promise<void> => {
@@ -23,7 +24,7 @@ describe("index", (): void => {
   })
 
   test("getVersion", (): void => {
-    const version: string = randSemver()
+    const version: string = fake.system.semver()
 
     expect(getVersion(version)).resolves.toBe(`v${version}`)
   })
@@ -31,15 +32,6 @@ describe("index", (): void => {
   test("getVersion - empty", (): void => {
     expect(getVersion(undefined)).resolves.toBe("N/A")
   })
-
-  const reminders: IReminder[] = [
-    {
-      date: randFutureDate().toISOString(),
-      description: null,
-      event: `${randVerb()} ${randNoun()}`,
-      id: null
-    } satisfies IReminder
-  ]
 
   // * NOTE: remapping because of case transformation on event title
   const remap = <T>(obj: T): T => {
@@ -59,12 +51,14 @@ describe("index", (): void => {
   }
 
   test("validate", async (): Promise<void> => {
-    const reminder: IReminder = reminders[0] as IReminder
+    const reminder: IReminder = await generateReminder()
 
     expect(validate<IReminder>(reminder)).resolves.toEqual(remap<IReminder>(reminder))
   })
 
   test("validate - array", async (): Promise<void> => {
+    const reminders: IReminder[] = await generateReminders()
+
     const validatedReminders: IReminder[] = await validate<IReminder[]>(reminders)
 
     expect(validatedReminders).toEqual(remap<IReminder[]>(reminders))

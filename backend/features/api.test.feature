@@ -1,4 +1,3 @@
-@wip
 Feature: Get all reminders
 
 	Scenario: Get reminder by ID
@@ -15,6 +14,11 @@ Feature: Get all reminders
 		Given that a user wants all reminders
 			When /get API endpoint is called
 			Then all reminders are returned
+
+	Scenario: Delete reminder by ID
+		Given that a user wants to delete a reminder
+			When /delete API endpoint is called with an ID
+			Then reminder data is deleted
 
 	Scenario: Get cache stats
 		Given that a user wants cache stats

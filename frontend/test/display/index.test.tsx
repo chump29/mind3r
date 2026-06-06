@@ -1,44 +1,27 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test"
+import { beforeAll, beforeEach, describe, expect, test } from "bun:test"
 
-import { clearFetchMocks, json, mockFetch, setPassthrough } from "@aryzing/bun-mock-fetch"
+import { json, mockFetch, setPassthrough } from "@aryzing/bun-mock-fetch"
+import { fakerEN_US as fake } from "@faker-js/faker"
 import { MantineProvider } from "@mantine/core"
 import { ModalsProvider } from "@mantine/modals"
-import { incrementalNumber, randCatchPhrase, randNoun, randSoonDate, randVerb } from "@ngneat/falso"
 import { act, configure, render, screen, waitFor } from "@testing-library/react"
 import { type UserEvent, default as userEvent } from "@testing-library/user-event"
 import { default as httpMethods } from "http-methods-constants"
 import { default as ms } from "ms"
 import { titleCase } from "title-case"
 
-import { type IReminder } from "../shared/IReminder.ts"
-import { displayStore } from "../shared/store.ts"
-import { default as Display } from "./index.tsx"
+import { default as Display } from "../../src/components/display/index.tsx"
+import { type IReminder } from "../../src/components/shared/IReminder.ts"
+import { displayStore } from "../../src/components/shared/store.ts"
+import { generateEvent, generateReminder, generateReminders, generateUser } from "../helpers.ts"
 
 configure({
   asyncUtilTimeout: ms("2s")
 })
 
-const idFactory = incrementalNumber()
+const data: IReminder[] = await generateReminders()
 
-const data: IReminder[] = Array.from(
-  {
-    length: 3
-  },
-  (): IReminder =>
-    ({
-      date: randSoonDate().toISOString(),
-      description: randCatchPhrase(),
-      event: `${randVerb()} ${randNoun()}`,
-      id: idFactory()
-    }) satisfies IReminder
-)
-
-const newData: IReminder = {
-  date: randSoonDate().toISOString(),
-  description: randCatchPhrase(),
-  event: `${randVerb()} ${randNoun()}`,
-  id: idFactory()
-}
+const newData: IReminder = await generateReminder()
 
 beforeAll((): void => {
   setPassthrough(false)
@@ -47,7 +30,7 @@ beforeAll((): void => {
 
   mockFetch(
     {
-      method: httpMethods.GET,
+      method: httpMethods.POST,
       url: `${API_URL}/get`
     },
     () => Response.json(data)
@@ -76,25 +59,30 @@ beforeAll((): void => {
     },
     json(true)
   )
+
+  window.localStorage.setItem("mind3rUser", generateUser())
+  console.info(`🔑 Logged in as: ${window.localStorage.getItem("mind3rUser")}`)
 })
 
 beforeEach(async (): Promise<void> => {
-  await act(async (): Promise<void> => {
-    render(
-      <MantineProvider>
-        <ModalsProvider>
-          <Display />
-        </ModalsProvider>
-      </MantineProvider>
-    )
+  await waitFor(async (): Promise<void> => {
+    await act(async (): Promise<void> => {
+      render(
+        <MantineProvider>
+          <ModalsProvider>
+            <Display />
+          </ModalsProvider>
+        </MantineProvider>
+      )
+    })
   })
 })
 
-afterAll((): void => {
-  clearFetchMocks()
-})
-
 describe("index", (): void => {
+  test("logged in", (): void => {
+    expect(window.localStorage.getItem("mind3rUSer")).not.toBeUndefined()
+  })
+
   test("fetchData", (): void => {
     expect(displayStore.getState().filteredData).toBeArrayOfSize(data.length)
   })
@@ -145,14 +133,14 @@ describe("index", (): void => {
       const testEvent: HTMLInputElement = screen.getByTestId("testEvent")
       await user.clear(testEvent)
       await user.type(testEvent, newData.event)
-      console.info("💥 Added event")
+      console.info("💥 Added event title")
     })
 
     await waitFor(async (): Promise<void> => {
       const testDescription: HTMLInputElement = screen.getByTestId("testDescription")
       await user.clear(testDescription)
       await user.type(testDescription, newData.description as string)
-      console.info("💥 Added description")
+      console.info("💥 Added event description")
     })
 
     data.push(newData)
@@ -175,7 +163,7 @@ describe("index", (): void => {
       console.info("💥 Edit button clicked")
     })
 
-    const newEvent: string = `${randVerb()} ${randNoun()}`
+    const newEvent: string = generateEvent()
 
     await waitFor(async (): Promise<void> => {
       const testEvent: HTMLInputElement = screen.getByTestId("testEvent")
@@ -257,14 +245,16 @@ describe("index", (): void => {
   test("filter reminders", async (): Promise<void> => {
     const user: UserEvent = userEvent.setup()
 
-    ;(displayStore.getState().filteredData.at(-1) as IReminder).description = "🔎"
+    const search: string = fake.word.sample()
+
+    ;(displayStore.getState().filteredData.at(-1) as IReminder).description = search
 
     const testSearch: HTMLInputElement = screen.getByTestId("testSearch")
 
     await waitFor(async (): Promise<void> => {
       await user.clear(testSearch)
       console.info("💥 Searching")
-      await user.type(testSearch, "🔎")
+      await user.type(testSearch, search)
     })
 
     expect(displayStore.getState().filteredData).toBeArrayOfSize(1)

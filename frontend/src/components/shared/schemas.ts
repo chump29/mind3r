@@ -21,12 +21,13 @@ import {
 dayjs.extend(utc)
 
 /**
- * Validates against Semantic Versioning Specification
+ * Validate against Semantic Versioning Specification
  * @constant
  * @summary non-empty string, valid {@link https://semver.org/|SemVer}
  */
 const VersionSchema = pipe(
   string(),
+  trim(),
   nonEmpty(),
   transform((s: string): string => s.replaceAll('"', "")),
   check(
@@ -60,7 +61,7 @@ const MAX_LEN_EVENT: number = 50
 const DATETIME_FORMAT: string = "dddd, MMMM Do @ h:mm A"
 
 /**
- * Validates date/time
+ * Validate date/time
  * @constant
  * @summary non-empty string, valid UTC {@link https://www.iso.org/iso-8601-date-and-time-format.html|ISO 8601} date-time
  */
@@ -72,39 +73,48 @@ const DateTimeSchema = pipe(
 )
 
 /**
- * Validates event title
+ * Validate event title
  * @constant
- * @summary non-empty string, max length = MAX_LEN_EVENT
+ * @summary non-empty string, max length = {@link MAX_LEN_EVENT}
  */
 const EventSchema = pipe(
   string(),
+  trim(),
   nonEmpty("This field is required"),
   maxLength(MAX_LEN_EVENT),
   transform((s: string): string => titleCase(s))
 )
 
 /**
- * Validates description
+ * Validate description
  * @constant
- * @summary null | non-empty string, max length = MAX_LEN_DESCRIPTION
+ * @summary null | non-empty string, max length = {@link MAX_LEN_DESCRIPTION}
  */
 const DescriptionSchema = nullable(
   pipe(
     string(),
-    nonEmpty(),
     trim(),
+    nonEmpty(),
     maxLength(MAX_LEN_DESCRIPTION),
     transform((s: string): string | null => (!s.length ? null : s))
   )
 )
 
 /**
- * Validates ID
+ * Validate ID
  * @constant
  * @summary null | positive integer
  * @default null
  */
 const IdSchema = nullable(pipe(number(), integer(), gtValue(0)), null)
+
+/**
+ * Validate user
+ * @constant
+ * @summary null | non-empty string
+ * @default null
+ */
+const UserSchema = nullable(pipe(string(), trim(), nonEmpty()), null)
 
 export {
   DATETIME_FORMAT,
@@ -114,5 +124,6 @@ export {
   IdSchema,
   MAX_LEN_DESCRIPTION,
   MAX_LEN_EVENT,
+  UserSchema,
   VersionSchema
 }

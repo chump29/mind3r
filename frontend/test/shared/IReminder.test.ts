@@ -1,17 +1,12 @@
 import { describe, expect, test } from "bun:test"
 
-import { randFutureDate, randNoun, randVerb } from "@ngneat/falso"
 import { safeParse } from "valibot"
 
-import { type IReminder, ReminderSchema } from "./IReminder.ts"
+import { type IReminder, ReminderSchema } from "../../src/components/shared/IReminder.ts"
+import { generateReminder } from "../helpers.ts"
 
-describe("IReminder", (): void => {
-  const reminder: IReminder = {
-    date: randFutureDate().toISOString(),
-    description: null,
-    event: `${randVerb()} ${randNoun()}`,
-    id: null
-  } satisfies IReminder
+describe("IReminder", async (): Promise<void> => {
+  const reminder: IReminder = await generateReminder()
 
   test("should validate object", async (): Promise<void> => {
     expect(safeParse(ReminderSchema, reminder).success).toBeTrue()

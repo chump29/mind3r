@@ -4,14 +4,16 @@
 
 """CRUD tests"""
 
-from datetime import UTC, datetime
+from datetime import UTC
 from pathlib import Path
 from tomllib import load
 from typing import TYPE_CHECKING, Final
 
-from api import (  # pylint: disable=import-error
+# pylint: disable-next=import-error
+from api import (
     PORT,
     ReminderDTO,
+    UserDTO,
     add_reminder,
     delete_reminder,
     get_all_reminders,
@@ -22,6 +24,8 @@ from api import (  # pylint: disable=import-error
 )
 from behave import given, then, when
 from box import Box
+from faker import Faker
+from features.environment import generate_description, generate_event, get_new_reminder
 
 if TYPE_CHECKING:
     from behave.runner import Context
@@ -29,6 +33,9 @@ if TYPE_CHECKING:
 else:
     Context = object
     _CacheInfo = object
+
+
+fake: Final[Faker] = Faker()
 
 
 @given("that a user wants a reminder by ID")
@@ -46,19 +53,20 @@ def call_get_one_reminder(context: Context) -> None:
 @then("reminder data is returned")
 def return_data(context: Context) -> None:
     """Return reminder data"""
-    assert context.reminder, "Invalid results"
-    assert context.reminder.id == 1, "Incorrect results"
+    assert context.reminder, "Invalid get_one_reminder results"
+    assert context.reminder.id == 1, "Incorrect get_one_reminder length"
 
 
 @given("that a user wants to update a reminder")
-def update_reminder_by_id(_: Context) -> None:
+def update_reminder_by_id(context: Context) -> None:
     """Update reminder by ID"""
+    context.description = generate_description()
 
 
 @when("/update API endpoint is called with an ID")
 def call_update_reminder(context: Context) -> None:
     """Call /update API with ID"""
-    context.reminder.description = "TESTME2"
+    context.reminder.description = context.description
     context.reminder = update_reminder(pk=context.reminder.id, reminder=context.reminder)
     assert not context.failed, "/update with ID call failed"
 
@@ -66,27 +74,46 @@ def call_update_reminder(context: Context) -> None:
 @then("reminder data is updated")
 def return_updated_data(context: Context) -> None:
     """Return updated reminder data"""
-    assert context.reminder, "Invalid results"
-    assert context.reminder.description == "TESTME2", "Could not update reminder description"
+    assert context.reminder, "Invalid update_reminder results"
+    assert context.reminder.description == context.description, "Could not update reminder description"
 
 
 @given("that a user wants all reminders")
-def get_reminders(_: Context) -> None:
+def get_reminders(context: Context) -> None:
     """Get all reminders"""
+    add_reminder(ReminderDTO(date=fake.past_datetime(tzinfo=UTC), event=generate_event(), user=context.user))  # expired
 
 
 @when("/get API endpoint is called")
 def call_get(context: Context) -> None:
     """Call /get API"""
-    context.reminders = get_all_reminders()
+    context.reminders = get_all_reminders(UserDTO(user=context.user))
     assert not context.failed, "/get call failed"
 
 
 @then("all reminders are returned")
 def return_all_reminders(context: Context) -> None:
     """Return all reminders"""
-    assert context.reminders, "Invalid results"
-    assert len(context.reminders) == 1, "Incorrect results"
+    assert context.reminders, "Invalid get_all_reminders results"
+    assert len(context.reminders) == 1, "Incorrect get_all_reminders length"
+
+
+@given("that a user wants to delete a reminder")
+def delete_reminder_by_id(_: Context) -> None:
+    """Delete a reminder"""
+
+
+@when("/delete API endpoint is called with an ID")
+def call_delete(context: Context) -> None:
+    """Call /delete API"""
+    context.isDeleted = delete_reminder(context.reminder.id)
+    assert not context.failed, "/delete call failed"
+
+
+@then("reminder data is deleted")
+def data_deleted(context: Context) -> None:
+    """Reminder data is deleted"""
+    assert context.isDeleted, "Could not delete reminder"
 
 
 @given("that a user wants cache stats")
@@ -104,7 +131,7 @@ def call_stats(context: Context) -> None:
 @then("cache stats are returned")
 def return_cache_stats(context: Context) -> None:
     """Return cache stats"""
-    assert context.stats, "Invalid results"
+    assert context.stats, "Invalid get_cache_stats results"
 
 
 @given("a request for the version")
@@ -130,7 +157,7 @@ def verify_port(_: Context, port: str) -> None:
 @then("version is returned")
 def version_returned(context: Context) -> None:
     """Return version"""
-    assert context.real_version == context.version, "Invalid results"
+    assert context.real_version == context.version, "Invalid get_version results"
 
 
 @then("version is cached")
@@ -150,10 +177,10 @@ def bad_requests(_: Context) -> None:
 @when("provided bad input")
 def bad_input(context: Context) -> None:
     """Bad input"""
-    bad_reminder: Final[ReminderDTO] = ReminderDTO(date=datetime.now(tz=UTC), event="")
+    bad_reminder: Final[ReminderDTO] = ReminderDTO(date=fake.future_datetime(tzinfo=UTC), event="", user=context.user)
     context.bad_add = add_reminder(bad_reminder)
     context.bad_update = update_reminder(1, bad_reminder)
-    context.bad_delete = delete_reminder(10)
+    context.bad_delete = delete_reminder(fake.random_int(min=10))
     assert not context.failed, "Bad API calls failed"
 
 
@@ -183,7 +210,7 @@ def stringify_reminder_dto(_: Context) -> None:
 @when("a ReminderDTO is output")
 def output_reminder_dto(context: Context) -> None:
     """Output a ReminderDTO"""
-    context.reminder_dto = str(ReminderDTO(date=datetime.now(tz=UTC), event="REMINDER_DTO"))
+    context.reminder_dto = str(get_new_reminder(context.user))
     assert not context.failed, "Unable to stringify ReminderDTO"
 
 

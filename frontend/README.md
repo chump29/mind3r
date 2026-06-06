@@ -12,7 +12,7 @@
 ![Tailwind](https://img.shields.io/badge/Tailwind-^4.3.0-informational?style=plastic&logo=tailwindcss "Tailwind") &nbsp;
 ![Vite](https://img.shields.io/badge/Vite-^8.0.16-informational?style=plastic&logo=vite "Vite")
 
-![Coverage](https://img.shields.io/badge/Coverage-96.59%25-success?style=plastic&logo=v8 "Coverage")
+![Coverage](https://img.shields.io/badge/Coverage-95.67%25-success?style=plastic&logo=v8 "Coverage")
 
 ---
 

@@ -5,7 +5,7 @@ import { array, safeParse, summarize } from "valibot"
 import { type IReminder, ReminderSchema } from "./IReminder.ts"
 
 /**
- * Finds DOM element
+ * Find DOM element
  * @async
  * @function
  * @param {string} element - element identifier
@@ -32,7 +32,7 @@ const getVersion = async (version: string | undefined): Promise<string> => {
 }
 
 /**
- * Validates {@link IReminder} object or array
+ * Validate {@link IReminder} object or array
  * @async
  * @function
  * @param {T} obj IReminder object or array
@@ -55,7 +55,7 @@ const validate = async <T>(obj: T): Promise<T> => {
 }
 
 /**
- * Shows {@link https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API|Fetch API} error message
+ * Show {@link https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API|Fetch API} error message
  * @class
  * @extends Error
  * @param {Response} response {@link https://developer.mozilla.org/en-US/docs/Web/API/Response|Response} object
@@ -71,7 +71,7 @@ class FetchError extends Error {
 }
 
 /**
- * Shows custom error messages
+ * Show custom error message
  * @function
  * @param {Error} e The {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error|Error} object
  */
@@ -94,7 +94,7 @@ const SortBy = Object.freeze({
 })
 
 /**
- * Column sort by types
+ * Column sort by values
  * @type {string}
  * @summary date | event
  */

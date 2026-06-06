@@ -1,20 +1,22 @@
 import { describe, expect, test } from "bun:test"
 
-import { rand, randBoolean, randNoun, randSoonDate, randVerb, randWord } from "@ngneat/falso"
+import { fakerEN_US as fake } from "@faker-js/faker"
 
-import { type IReminder } from "./IReminder.ts"
-import { SortBy, SortOrder } from "./index.ts"
-import { displayStore, setEditing, setFilteredData, setIsAdding, setSearch, setSortBy, setSortOrder } from "./store.ts"
+import { type IReminder } from "../../src/components/shared/IReminder.ts"
+import { SortBy, SortOrder } from "../../src/components/shared/index.ts"
+import {
+  displayStore,
+  setEditing,
+  setFilteredData,
+  setIsAdding,
+  setSearch,
+  setSortBy,
+  setSortOrder
+} from "../../src/components/shared/store.ts"
+import { generateReminders } from "../helpers.ts"
 
-describe("store", (): void => {
-  const reminders: IReminder[] = [
-    {
-      date: randSoonDate().toISOString(),
-      description: null,
-      event: `${randVerb()} ${randNoun()}`,
-      id: null
-    } satisfies IReminder
-  ]
+describe("store", async (): Promise<void> => {
+  const reminders: IReminder[] = await generateReminders()
 
   test("setEditing", (): void => {
     const reminder: IReminder = reminders[0] as IReminder
@@ -31,7 +33,7 @@ describe("store", (): void => {
   })
 
   test("setIsAdding", (): void => {
-    const isAdding: boolean = randBoolean()
+    const isAdding: boolean = fake.datatype.boolean()
 
     setIsAdding(isAdding)
 
@@ -39,7 +41,7 @@ describe("store", (): void => {
   })
 
   test("setSortOrder", (): void => {
-    const sortOrder: SortOrder = rand(Object.values(SortOrder))
+    const sortOrder: SortOrder = fake.helpers.objectValue(SortOrder)
 
     setSortOrder(sortOrder)
 
@@ -47,7 +49,7 @@ describe("store", (): void => {
   })
 
   test("setSearch", (): void => {
-    const search: string = randWord()
+    const search: string = fake.word.sample()
 
     setSearch(search)
 
@@ -55,7 +57,7 @@ describe("store", (): void => {
   })
 
   test("setSortBy", (): void => {
-    const sortBy: SortBy = rand(Object.values(SortBy))
+    const sortBy: SortBy = fake.helpers.objectValue(SortBy)
 
     setSortBy(sortBy)
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 
-import { randCatchPhrase, randNoun, randNumber, randSemver, randSoonDate, randText, randVerb } from "@ngneat/falso"
+import { fakerEN_US as fake } from "@faker-js/faker"
 import { default as dayjs } from "dayjs"
 import { safeParse } from "valibot"
 
@@ -11,12 +11,14 @@ import {
   IdSchema,
   MAX_LEN_DESCRIPTION,
   MAX_LEN_EVENT,
+  UserSchema,
   VersionSchema
-} from "./schemas.ts"
+} from "../../src/components/shared/schemas.ts"
+import { generateDescription, generateEvent, generateUser } from "../helpers.ts"
 
 describe("schema", (): void => {
   test("VersionSchema", (): void => {
-    expect(safeParse(VersionSchema, randSemver()).success).toBeTrue()
+    expect(safeParse(VersionSchema, fake.system.semver()).success).toBeTrue()
   })
 
   test("VersionSchema - fail", (): void => {
@@ -27,7 +29,7 @@ describe("schema", (): void => {
   })
 
   test("DateTimeSchema", (): void => {
-    expect(safeParse(DateTimeSchema, randSoonDate().toISOString()).success).toBeTrue()
+    expect(safeParse(DateTimeSchema, fake.date.soon().toISOString()).success).toBeTrue()
   })
 
   test("DateTimeSchema - fail", (): void => {
@@ -39,13 +41,11 @@ describe("schema", (): void => {
   })
 
   test("EventSchema", (): void => {
-    expect(safeParse(EventSchema, `${randVerb()} ${randNoun()}`).success).toBeTrue()
+    expect(safeParse(EventSchema, generateEvent()).success).toBeTrue()
   })
 
   test("EventSchema - fail", (): void => {
-    const event: string = randText({
-      charCount: MAX_LEN_EVENT + 1
-    })
+    const event: string = fake.string.alphanumeric(MAX_LEN_EVENT + 1)
     const e = safeParse(EventSchema, event)
 
     expect(e.success).toBeFalse()
@@ -53,13 +53,11 @@ describe("schema", (): void => {
   })
 
   test("DescriptionSchema", (): void => {
-    expect(safeParse(DescriptionSchema, randCatchPhrase()).success).toBeTrue()
+    expect(safeParse(DescriptionSchema, generateDescription()).success).toBeTrue()
   })
 
   test("DescriptionSchema - fail", (): void => {
-    const description: string = randText({
-      charCount: MAX_LEN_DESCRIPTION + 1
-    })
+    const description: string = fake.string.alphanumeric(MAX_LEN_DESCRIPTION + 1)
     const d = safeParse(DescriptionSchema, description)
 
     expect(d.success).toBeFalse()
@@ -70,7 +68,7 @@ describe("schema", (): void => {
     expect(
       safeParse(
         IdSchema,
-        randNumber({
+        fake.number.int({
           min: 1
         })
       ).success
@@ -83,5 +81,17 @@ describe("schema", (): void => {
 
     expect(i.success).toBeFalse()
     expect(i.issues?.[0].message).toInclude(">0")
+  })
+
+  test("UserSchema", (): void => {
+    expect(safeParse(UserSchema, generateUser()).success).toBeTrue()
+  })
+
+  test("UserSchema - fail", (): void => {
+    const user: string = " "
+    const u = safeParse(UserSchema, user)
+
+    expect(u.success).toBeFalse()
+    expect(u.issues?.[0].message).toInclude("Invalid length")
   })
 })
