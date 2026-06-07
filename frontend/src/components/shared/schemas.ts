@@ -14,15 +14,18 @@ import {
   number,
   pipe,
   string,
+  toBoolean,
   transform,
-  trim
+  trim,
+  unknown,
+  url
 } from "valibot"
 
 dayjs.extend(utc)
 
 /**
  * Validate against Semantic Versioning Specification
- * @constant
+ * @function
  * @summary non-empty string, valid {@link https://semver.org/|SemVer}
  */
 const VersionSchema = pipe(
@@ -35,6 +38,8 @@ const VersionSchema = pipe(
     (e: CheckIssue<string>): string => `Invalid SemVer: ${e.input}`
   )
 )
+
+type VersionSchema = typeof VersionSchema
 
 /**
  * Maximum description length
@@ -62,7 +67,7 @@ const DATETIME_FORMAT: string = "dddd, MMMM Do @ h:mm A"
 
 /**
  * Validate date/time
- * @constant
+ * @function
  * @summary non-empty string, valid UTC {@link https://www.iso.org/iso-8601-date-and-time-format.html|ISO 8601} date-time
  */
 const DateTimeSchema = pipe(
@@ -72,9 +77,11 @@ const DateTimeSchema = pipe(
   minValue(dayjs().add(1, "m").toISOString(), "Must be greater than the current date/time")
 )
 
+type DateTimeSchema = typeof DateTimeSchema
+
 /**
  * Validate event title
- * @constant
+ * @function
  * @summary non-empty string, max length = {@link MAX_LEN_EVENT}
  */
 const EventSchema = pipe(
@@ -85,10 +92,13 @@ const EventSchema = pipe(
   transform((s: string): string => titleCase(s))
 )
 
+type EventSchema = typeof EventSchema
+
 /**
  * Validate description
- * @constant
+ * @function
  * @summary null | non-empty string, max length = {@link MAX_LEN_DESCRIPTION}
+ * @default null
  */
 const DescriptionSchema = nullable(
   pipe(
@@ -100,23 +110,86 @@ const DescriptionSchema = nullable(
   )
 )
 
+type DescriptionSchema = typeof DescriptionSchema
+
 /**
  * Validate ID
  * @constant
  * @summary null | positive integer
  * @default null
  */
-const IdSchema = nullable(pipe(number(), integer(), gtValue(0)), null)
+const IdSchema = nullable(pipe(number(), integer(), gtValue(0)))
+
+type IdSchema = typeof IdSchema
+
+/**
+ * Maximum search length
+ * @constant
+ * @type {number}
+ * @default 50
+ */
+const MAX_LEN_SEARCH: number = 50
+
+/**
+ * Maximum name length
+ * @constant
+ * @type {number}
+ * @default 50
+ */
+const MAX_LEN_NAME: number = 20
 
 /**
  * Validate user
- * @constant
- * @summary null | non-empty string
+ * @function
+ * @summary non-empty string, max length = {@link MAX_LEN_NAME}
  * @default null
  */
-const UserSchema = nullable(pipe(string(), trim(), nonEmpty()), null)
+const UserSchema = nullable(
+  pipe(
+    string(),
+    trim(),
+    nonEmpty(),
+    maxLength(MAX_LEN_NAME),
+    transform((s: string): string => s.replaceAll('"', ""))
+  )
+)
+
+type UserSchema = typeof UserSchema
+
+/**
+ * Validate search
+ * @function
+ * @summary printable ASCII string, max length = {@link MAX_LEN_SEARCH}
+ */
+const SearchSchema = pipe(
+  string(),
+  trim(),
+  maxLength(MAX_LEN_SEARCH),
+  transform((s: string): string => s.replace(/[^\x20-\x7E]/g, ""))
+)
+
+type SearchSchema = typeof SearchSchema
+
+/**
+ * Validate boolean
+ * @function
+ * @summary valid boolean {@link https://developer.mozilla.org/en-US/docs/Glossary/Truthy value}
+ */
+const BooleanSchema = pipe(unknown(), toBoolean())
+
+type BooleanSchema = typeof BooleanSchema
+
+/**
+ * Validate URL
+ * @function
+ * @summary valid {@link https://datatracker.ietf.org/doc/html/rfc3986 URL}
+ */
+const UrlSchema = pipe(string(), trim(), nonEmpty(), url())
+
+type UrlSchema = typeof UrlSchema
 
 export {
+  BooleanSchema,
   DATETIME_FORMAT,
   DateTimeSchema,
   DescriptionSchema,
@@ -124,6 +197,10 @@ export {
   IdSchema,
   MAX_LEN_DESCRIPTION,
   MAX_LEN_EVENT,
+  MAX_LEN_NAME,
+  MAX_LEN_SEARCH,
+  SearchSchema,
+  UrlSchema,
   UserSchema,
   VersionSchema
 }

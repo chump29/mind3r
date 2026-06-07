@@ -78,30 +78,6 @@ class UserDTO(BaseModel):
         return hash(self.user)
 
 
-def shorten(user: str) -> str:
-    """Return shortened SHA-256 string"""
-    return user[:7]
-
-
-class ReminderDTO(BaseModel):
-    """Reminder domain model"""
-
-    id: PositiveInt | None = Field(strict=True, default=None)
-    date: datetime
-    event: StrictStr = Field(max_length=MAX_LEN_EVENT)
-    description: StrictStr | None = Field(max_length=MAX_LEN, default=None)
-    user: StrictStr = Field(max_length=MAX_LEN)
-
-    model_config = ConfigDict(extra="forbid")
-
-    def __str__(self: ReminderDTO) -> str:
-        """Show ReminderDTO data"""
-        return (
-            f"id={self.id}, date={self.date}, event={self.event}, "
-            f"description={self.description}, user={shorten(self.user)}"
-        )
-
-
 class Reminder(Model):
     """Reminder database model"""
 
@@ -116,6 +92,34 @@ class Reminder(Model):
         """Metadata"""
 
         database: Final[SqliteDatabase] = DB
+
+
+def shorten(user: str) -> str:
+    """Return shortened SHA-256 string"""
+    return user[:7]
+
+
+class ReminderDTO(BaseModel):
+    """Reminder domain model"""
+
+    id: PositiveInt | None = Field(strict=True, default=None)
+    date: datetime
+    event: StrictStr = Field(max_length=MAX_LEN_EVENT)
+    description: StrictStr | None = Field(max_length=MAX_LEN, default=None)
+    user: StrictStr | None = Field(max_length=MAX_LEN, default=None)
+
+    model_config = ConfigDict(extra="forbid")
+
+    def __str__(self: ReminderDTO) -> str:
+        """Show ReminderDTO data"""
+        return (
+            f"id={self.id}, date={self.date}, event={self.event}, "
+            f"description={self.description}, user={shorten(str(self.user))}"
+        )
+
+    def sanitize(self: ReminderDTO) -> ReminderDTO:
+        """Sanitize ReminderDTO"""
+        return setattr(self, "user", None) or self
 
 
 def log(msg: str, info: str = "") -> None:
@@ -143,13 +147,20 @@ elif DEBUG:
 ROUTER: Final[APIRouter] = APIRouter(prefix="/api")
 
 
-type Json = int | float | None | dict[str, Json] | list[Json]
+type Json = int | float | None | dict[str, Json] | list[str] | list[Json]
 
 
-@ROUTER.get("/cache", response_model=Json)
+@ROUTER.get("/cache", response_model=Json | None)
 def get_cache_stats() -> Json:
     """Get cache stats"""
     try:
+
+        def get_cached_users() -> list[str]:
+            """Get cached users"""
+            json: list[str] = []
+            if get_all_reminders.cache:
+                json.extend(item[0][1][1].user for item in list(get_all_reminders.cache.items()))
+            return json
 
         def create_stats(func: _cached_wrapper_info) -> Json:
             """Create stats"""
@@ -160,6 +171,7 @@ def get_cache_stats() -> Json:
                     "Misses": info.misses,
                     "Maximum Size": info.maxsize,
                     "Current Size": info.currsize,
+                    "Cached Users": get_cached_users() if func.__name__ == get_all_reminders.__name__ else None,
                 }
             }
 
@@ -183,7 +195,7 @@ def delete_expired(user: str) -> None:
         CONSOLE.print_exception()
 
 
-@ROUTER.get("/version", response_model=str)
+@ROUTER.get("/version", response_model=str | None)
 @cached(cache=LRUCache(maxsize=1), info=True)
 def get_version() -> str | None:
     """Get version"""
@@ -211,8 +223,8 @@ def get_user_hash(user: str) -> str:
     return sha256(user.encode()).hexdigest()
 
 
-@ROUTER.post("/get", response_model=list[ReminderDTO])
-@cached(cache=LRUCache(maxsize=1), info=True)
+@ROUTER.post("/get", response_model=list[ReminderDTO] | None)
+@cached(cache=LRUCache(maxsize=10), info=True)
 def get_all_reminders(user: UserDTO) -> list[ReminderDTO] | None:
     """Get all reminders"""
     if not user or not user.user:
@@ -225,7 +237,10 @@ def get_all_reminders(user: UserDTO) -> list[ReminderDTO] | None:
             return None
         if DEBUG:
             log(f"Getting {pluralizer.pluralize('reminder', count, True)} for {shorten(user_hash)}")
-        return list(Reminder.select().where(Reminder.user == user_hash).order_by(Reminder.date.asc()).dicts())
+        return [
+            ReminderDTO(**model_to_dict(reminder)).sanitize()
+            for reminder in Reminder.select().where(Reminder.user == user_hash).order_by(Reminder.date.asc())
+        ]
     except Exception:  # pylint: disable=broad-exception-caught
         CONSOLE.print_exception()
         return None
@@ -237,7 +252,7 @@ def get_one_reminder(pk: int) -> ReminderDTO | None:
     try:
         if DEBUG:
             log("Getting reminder ID", str(pk))
-        return Reminder.get_or_none(Reminder.id == pk)
+        return ReminderDTO(**model_to_dict(Reminder.get_or_none(Reminder.id == pk))).sanitize()
     except Exception:  # pylint: disable=broad-exception-caught
         CONSOLE.print_exception()
         return None
@@ -261,13 +276,14 @@ def add_reminder(reminder: ReminderDTO) -> ReminderDTO | None:
     r: Final[ReminderDTO | None] = sanitize(reminder)
     if not r:
         return None
-    r.user = get_user_hash(r.user)
+    r.user = get_user_hash(str(r.user))
     try:
         if DEBUG:
             log("Adding reminder", str(r))
-        event: Final[Reminder] = Reminder.create(date=r.date, event=r.event, description=r.description, user=r.user)
         get_all_reminders.cache_clear()
-        return ReminderDTO.model_validate(model_to_dict(event))
+        return ReminderDTO(
+            **model_to_dict(Reminder.create(date=r.date, event=r.event, description=r.description, user=r.user))
+        ).sanitize()
     except Exception:  # pylint: disable=broad-exception-caught
         CONSOLE.print_exception()
         return None

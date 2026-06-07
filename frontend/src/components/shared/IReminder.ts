@@ -23,6 +23,8 @@ const ReminderSchema = object({
   user: UserSchema
 })
 
+type ReminderSchema = typeof ReminderSchema
+
 /**
  * Interface for ReminderSchema
  * @interface IReminder

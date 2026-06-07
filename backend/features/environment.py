@@ -40,7 +40,11 @@ def generate_description() -> str:
 def get_new_reminder(user: str) -> ReminderDTO:
     """Return new ReminderDTO"""
     return ReminderDTO(
-        date=fake.future_datetime(tzinfo=UTC), event=generate_event(), description=generate_description(), user=user
+        id=None,
+        date=fake.future_datetime(tzinfo=UTC),
+        event=generate_event(),
+        description=generate_description(),
+        user=user,
     )
 
 

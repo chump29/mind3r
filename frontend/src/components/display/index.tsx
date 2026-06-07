@@ -43,17 +43,23 @@ import { default as httpMethods } from "http-methods-constants"
 import { default as ms } from "ms"
 import { default as useSWR } from "swr/immutable"
 import { default as useLocalStorageState } from "use-local-storage-state"
-import { nonEmpty, parseBoolean, pipe, safeParse, string, trim } from "valibot"
+import { type SafeParseResult, safeParse } from "valibot"
 
 import { type IReminder } from "../shared/IReminder.ts"
 import { FetchError, handleError, SortBy, SortOrder, validate } from "../shared/index.ts"
 import {
+  BooleanSchema,
   DATETIME_FORMAT,
   DateTimeSchema,
   DescriptionSchema,
   EventSchema,
   MAX_LEN_DESCRIPTION,
-  MAX_LEN_EVENT
+  MAX_LEN_EVENT,
+  MAX_LEN_NAME,
+  MAX_LEN_SEARCH,
+  SearchSchema,
+  UrlSchema,
+  UserSchema
 } from "../shared/schemas.ts"
 import {
   displayStore,
@@ -72,13 +78,15 @@ import { type IUser, vUserSchema } from "../shared/IUser.ts"
 
 dayjs.extend(advancedFormat)
 
-const d = safeParse(pipe(string(), trim(), nonEmpty(), parseBoolean()), import.meta.env.VITE_DEBUG)
+const d: SafeParseResult<BooleanSchema> = safeParse(BooleanSchema, import.meta.env.VITE_DEBUG)
 const DEBUG: boolean = d.success ? d.output : false
 if (DEBUG) {
   info("Debug is ON")
 }
 
-const API_URL: string = `${import.meta.env.VITE_API_URL || ""}/api`
+const u: SafeParseResult<UrlSchema> = safeParse(UrlSchema, import.meta.env.VITE_API_URL)
+const API_URL: string = `${u.success ? u.output : ""}/api`
+
 const API_TIMEOUT: number = ms("3s")
 
 const Th = ({
@@ -135,15 +143,15 @@ const Display = (): JSX.Element => {
     },
     validate: {
       date: (s: string): string | null => {
-        const d = safeParse(DateTimeSchema, s)
+        const d: SafeParseResult<DateTimeSchema> = safeParse(DateTimeSchema, s)
         return d.success ? null : d.issues[0].message
       },
       description: (s: string | null): string | null => {
-        const d = safeParse(DescriptionSchema, s)
+        const d: SafeParseResult<DescriptionSchema> = safeParse(DescriptionSchema, s)
         return d.success ? null : d.issues[0].message
       },
       event: (s: string): string | null => {
-        const e = safeParse(EventSchema, s)
+        const e: SafeParseResult<EventSchema> = safeParse(EventSchema, s)
         return e.success ? null : e.issues[0].message
       }
     }
@@ -151,9 +159,9 @@ const Display = (): JSX.Element => {
 
   const [openedLogin, { open: openLogin, close: closeLogin }] = useDisclosure(false)
 
-  const userValue: RefObject<string | undefined> = useRef<string | undefined>(undefined)
+  const userValue: RefObject<string | null> = useRef<string | null>(null)
 
-  const [user, setUser, { removeItem: resetUser, isPersistent: useLocalStorage }] = useLocalStorageState<string>(
+  const [user, setUser, { removeItem: resetUser, isPersistent: useLocalStorage }] = useLocalStorageState<string | null>(
     "mind3rUser",
     {
       defaultValue: undefined
@@ -165,10 +173,14 @@ const Display = (): JSX.Element => {
   }
 
   const fetchData = async (url: string): Promise<IReminder[]> => {
+    if (!user) {
+      return []
+    }
+
     const userObj: IUser = {
       user: user
     } satisfies IUser
-    const u = safeParse(vUserSchema, userObj)
+    const u: SafeParseResult<vUserSchema> = safeParse(vUserSchema, userObj)
     if (!u.success) {
       throw new Error("Invalid user")
     }
@@ -176,7 +188,10 @@ const Display = (): JSX.Element => {
     return await fetch(url, {
       body: JSON.stringify(u.output),
       method: httpMethods.POST,
-      signal: AbortSignal.timeout(API_TIMEOUT)
+      signal: AbortSignal.timeout(API_TIMEOUT),
+      headers: {
+        "Content-Type": "application/json"
+      }
     })
       .then(async (response: Response): Promise<IReminder[]> => {
         if (!response.ok) {
@@ -186,6 +201,10 @@ const Display = (): JSX.Element => {
         return await response.json()
       })
       .then(async (reminders: IReminder[]): Promise<IReminder[]> => {
+        if (!reminders) {
+          return []
+        }
+
         reminders = await validate<IReminder[]>(reminders)
 
         if (DEBUG) {
@@ -200,7 +219,7 @@ const Display = (): JSX.Element => {
       })
   }
 
-  const { data = [], mutate: refreshData } = useSWR(`${API_URL}/get`, fetchData, {
+  const { data = [], mutate: refreshData } = useSWR(user ? `${API_URL}/get` : null, fetchData, {
     onSuccess: (data: IReminder[]): void => {
       setFilteredData(data)
 
@@ -283,7 +302,7 @@ const Display = (): JSX.Element => {
   }
 
   const filterAndSort = (value: string = ""): void => {
-    setSearch(value.trim())
+    setSearch(value) // * NOTE: already validated
 
     filterData()
 
@@ -363,6 +382,10 @@ const Display = (): JSX.Element => {
   }
 
   const handleSubmit = async (reminder: IReminder): Promise<void> => {
+    if (!user) {
+      return
+    }
+
     reminder.user = user
 
     const r: IReminder = await validate<IReminder>(reminder)
@@ -508,9 +531,10 @@ const Display = (): JSX.Element => {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: loading from localStorage
   useEffect((): void => {
-    const user: string | null = window.localStorage.getItem("mind3rUser")
+    const user: string | null = localStorage.getItem("mind3rUser")
     if (user) {
-      setUser(user.replaceAll('"', "").trim())
+      const u: SafeParseResult<UserSchema> = safeParse(UserSchema, user)
+      setUser(u.success ? u.output : null)
     }
   }, [])
 
@@ -520,12 +544,18 @@ const Display = (): JSX.Element => {
         <Tooltip label="Name" withArrow>
           <TextInput
             data-testid="testName"
-            error={!user}
+            error={!userValue.current}
             label="Name"
-            onChange={(e: ChangeEvent<HTMLInputElement>): void => setUser(e.target.value)}
+            maxLength={MAX_LEN_NAME}
+            onChange={(e: ChangeEvent<HTMLInputElement>): void => {
+              const u: SafeParseResult<UserSchema> = safeParse(UserSchema, e.target.value)
+              userValue.current = u.success ? u.output : null
+            }}
             onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>): void => {
               if (e.key === "Enter") {
                 closeLogin()
+                setUser(userValue.current)
+                filterAndSort()
               }
             }}
             placeholder="Enter name..."
@@ -536,8 +566,10 @@ const Display = (): JSX.Element => {
                   <IconCheck
                     color="green"
                     onClick={(): void => {
-                      if (user) {
+                      if (userValue.current) {
                         closeLogin()
+                        setUser(userValue.current)
+                        filterAndSort()
                       }
                     }}
                     size={16}
@@ -555,6 +587,7 @@ const Display = (): JSX.Element => {
                         resetUser()
                       }
                       closeLogin()
+                      filterAndSort()
                     }}
                     size={16}
                     style={{
@@ -565,7 +598,7 @@ const Display = (): JSX.Element => {
                 </Tooltip>
               </>
             }
-            value={user}
+            value={user ?? undefined}
           />
         </Tooltip>
       </Modal>
@@ -595,7 +628,12 @@ const Display = (): JSX.Element => {
           <Text c="dimmed" fs="italic" size="xs">
             Logged in as:{" "}
             <Tooltip label="Log Out" withArrow>
-              <Anchor c="blue" onClick={resetUser}>
+              <Anchor
+                c="blue"
+                onClick={(): void => {
+                  resetUser()
+                  filterAndSort()
+                }}>
                 {user}
               </Anchor>
             </Tooltip>
@@ -615,7 +653,11 @@ const Display = (): JSX.Element => {
               data-testid="testSearch"
               disabled={!data.length}
               leftSection={<IconSearch color="white" size={16} />}
-              onChange={(e: ChangeEvent<HTMLInputElement>): void => filterAndSort(e.currentTarget.value)}
+              maxLength={MAX_LEN_SEARCH}
+              onChange={(e: ChangeEvent<HTMLInputElement>): void => {
+                const s: SafeParseResult<SearchSchema> = safeParse(SearchSchema, e.currentTarget.value)
+                filterAndSort(s.success ? s.output : undefined)
+              }}
               placeholder="Search by Event or Description..."
               rightSection={
                 <Tooltip label="Clear" withArrow>

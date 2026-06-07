@@ -54,7 +54,7 @@ def call_get_one_reminder(context: Context) -> None:
 def return_data(context: Context) -> None:
     """Return reminder data"""
     assert context.reminder, "Invalid get_one_reminder results"
-    assert context.reminder.id == 1, "Incorrect get_one_reminder length"
+    assert context.reminder.id == 1, "Incorrect get_one_reminder ID"
 
 
 @given("that a user wants to update a reminder")
@@ -67,6 +67,7 @@ def update_reminder_by_id(context: Context) -> None:
 def call_update_reminder(context: Context) -> None:
     """Call /update API with ID"""
     context.reminder.description = context.description
+    context.reminder.user = context.user
     context.reminder = update_reminder(pk=context.reminder.id, reminder=context.reminder)
     assert not context.failed, "/update with ID call failed"
 

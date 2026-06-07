@@ -6,17 +6,17 @@ import { MantineProvider } from "@mantine/core"
 import { ModalsProvider } from "@mantine/modals"
 import { default as ms } from "ms"
 import { createRoot } from "react-dom/client"
-import { nonEmpty, parseBoolean, pipe, safeParse, string, summarize } from "valibot"
+import { type SafeParseResult, safeParse, summarize } from "valibot"
 
 import { default as Display } from "./components/display/index.tsx"
 import { findElement, getVersion } from "./components/shared/index.ts"
-import { VersionSchema } from "./components/shared/schemas.ts"
+import { BooleanSchema, UrlSchema, VersionSchema } from "./components/shared/schemas.ts"
 
-const d = safeParse(pipe(string(), nonEmpty(), parseBoolean()), import.meta.env.VITE_DEBUG)
+const d: SafeParseResult<BooleanSchema> = safeParse(BooleanSchema, import.meta.env.VITE_DEBUG)
 const DEBUG: boolean = d.success ? d.output : false
 
 let version: string = ""
-const v = safeParse(VersionSchema, import.meta.env.PACKAGE_VERSION)
+const v: SafeParseResult<VersionSchema> = safeParse(VersionSchema, import.meta.env.PACKAGE_VERSION)
 if (v.success) {
   version = v.output
 } else {
@@ -33,7 +33,8 @@ if (DEBUG) {
 
 const obj: HTMLElement = await findElement("#backend")
 
-const API_URL: string = `${import.meta.env.VITE_API_URL || ""}/api`
+const u: SafeParseResult<UrlSchema> = safeParse(UrlSchema, import.meta.env.VITE_API_URL)
+const API_URL: string = `${u.success ? u.output : ""}/api`
 
 // * NOTE: not using await, don't hold up page render
 fetch(`${API_URL}/version`, {
@@ -48,7 +49,7 @@ fetch(`${API_URL}/version`, {
   })
   .then(async (rawVersion: string): Promise<void> => {
     let version: string = ""
-    const v = safeParse(VersionSchema, rawVersion)
+    const v: SafeParseResult<VersionSchema> = safeParse(VersionSchema, rawVersion)
     if (v.success) {
       version = v.output
     } else {
@@ -72,22 +73,12 @@ fetch(`${API_URL}/version`, {
     }
   })
 
-if (import.meta.env.DEV) {
-  createRoot(await findElement("#root")).render(
+createRoot(await findElement("#root")).render(
+  <StrictMode>
     <MantineProvider defaultColorScheme="dark">
       <ModalsProvider>
         <Display />
       </ModalsProvider>
     </MantineProvider>
-  )
-} else {
-  createRoot(await findElement("#root")).render(
-    <StrictMode>
-      <MantineProvider defaultColorScheme="dark">
-        <ModalsProvider>
-          <Display />
-        </ModalsProvider>
-      </MantineProvider>
-    </StrictMode>
-  )
-}
+  </StrictMode>
+)

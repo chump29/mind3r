@@ -11,6 +11,8 @@ const vUserSchema = object({
   user: UserSchema
 })
 
+type vUserSchema = typeof vUserSchema
+
 /**
  * Interface for vUserSchema
  * @interface IUser

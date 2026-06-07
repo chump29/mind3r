@@ -1,6 +1,6 @@
 import { error } from "@postfmly/logger"
 
-import { array, safeParse, summarize } from "valibot"
+import { type ArraySchema, array, type SafeParseResult, safeParse, summarize } from "valibot"
 
 import { type IReminder, ReminderSchema } from "./IReminder.ts"
 
@@ -40,7 +40,7 @@ const getVersion = async (version: string | undefined): Promise<string> => {
  * @throws {Error} If validation fails
  */
 const validate = async <T>(obj: T): Promise<T> => {
-  let r
+  let r: SafeParseResult<ReminderSchema | ArraySchema<ReminderSchema, string>>
   if (Array.isArray(obj)) {
     r = safeParse(array(ReminderSchema), obj)
   } else {
@@ -93,11 +93,6 @@ const SortBy = Object.freeze({
   EVENT: "event"
 })
 
-/**
- * Column sort by values
- * @type {string}
- * @summary date | event
- */
 type SortBy = (typeof SortBy)[keyof typeof SortBy]
 
 /**
@@ -110,11 +105,6 @@ const SortOrder = Object.freeze({
   DESC: "desc"
 })
 
-/**
- * Column sort order types
- * @type {string}
- * @summary asc | desc
- */
 type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 export { FetchError, findElement, getVersion, handleError, SortBy, SortOrder, validate }

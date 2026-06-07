@@ -4,20 +4,15 @@ import { json, mockFetch, setPassthrough } from "@aryzing/bun-mock-fetch"
 import { fakerEN_US as fake } from "@faker-js/faker"
 import { MantineProvider } from "@mantine/core"
 import { ModalsProvider } from "@mantine/modals"
-import { act, configure, render, screen, waitFor } from "@testing-library/react"
+import { act, render, screen, waitFor } from "@testing-library/react"
 import { type UserEvent, default as userEvent } from "@testing-library/user-event"
 import { default as httpMethods } from "http-methods-constants"
-import { default as ms } from "ms"
 import { titleCase } from "title-case"
 
 import { default as Display } from "../../src/components/display/index.tsx"
 import { type IReminder } from "../../src/components/shared/IReminder.ts"
 import { displayStore } from "../../src/components/shared/store.ts"
 import { generateEvent, generateReminder, generateReminders, generateUser } from "../helpers.ts"
-
-configure({
-  asyncUtilTimeout: ms("2s")
-})
 
 const data: IReminder[] = await generateReminders()
 
@@ -26,12 +21,10 @@ const newData: IReminder = await generateReminder()
 beforeAll((): void => {
   setPassthrough(false)
 
-  const API_URL: string = `${import.meta.env.VITE_API_URL || ""}/api`
-
   mockFetch(
     {
       method: httpMethods.POST,
-      url: `${API_URL}/get`
+      url: "/api/get"
     },
     () => Response.json(data)
   )
@@ -39,7 +32,7 @@ beforeAll((): void => {
   mockFetch(
     {
       method: httpMethods.POST,
-      url: `${API_URL}/add`
+      url: "/api/add"
     },
     json(newData)
   )
@@ -47,7 +40,7 @@ beforeAll((): void => {
   mockFetch(
     {
       method: httpMethods.PUT,
-      url: `${API_URL}/update/1`
+      url: "/api/update/1"
     },
     json(newData)
   )
@@ -55,13 +48,13 @@ beforeAll((): void => {
   mockFetch(
     {
       method: httpMethods.DELETE,
-      url: `${API_URL}/delete/1`
+      url: "/api/delete/1"
     },
     json(true)
   )
 
-  window.localStorage.setItem("mind3rUser", generateUser())
-  console.info(`🔑 Logged in as: ${window.localStorage.getItem("mind3rUser")}`)
+  localStorage.setItem("mind3rUser", generateUser())
+  console.info(`🔑 Logged in as: ${localStorage.getItem("mind3rUser")}`)
 })
 
 beforeEach(async (): Promise<void> => {
@@ -80,7 +73,7 @@ beforeEach(async (): Promise<void> => {
 
 describe("index", (): void => {
   test("logged in", (): void => {
-    expect(window.localStorage.getItem("mind3rUSer")).not.toBeUndefined()
+    expect(localStorage.getItem("mind3rUSer")).not.toBeUndefined()
   })
 
   test("fetchData", (): void => {

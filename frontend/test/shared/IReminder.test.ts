@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 
-import { safeParse } from "valibot"
+import { type SafeParseResult, safeParse } from "valibot"
 
 import { type IReminder, ReminderSchema } from "../../src/components/shared/IReminder.ts"
 import { generateReminder } from "../helpers.ts"
@@ -14,7 +14,7 @@ describe("IReminder", async (): Promise<void> => {
 
   test("should not validate object", (): void => {
     reminder.event = ""
-    const r = safeParse(ReminderSchema, reminder)
+    const r: SafeParseResult<ReminderSchema> = safeParse(ReminderSchema, reminder)
 
     expect(r.success).toBeFalse()
     expect(r.issues?.[0].message).toBe("This field is required")

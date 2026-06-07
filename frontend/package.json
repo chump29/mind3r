@@ -37,7 +37,7 @@
     "prepare": "cd .. && husky frontend/.husky",
     "prod": "bun run build && cd dist && bunx serve",
     "scan": "bunx cve-lite-cli",
-    "test": "bun run clean:coverage && bun test --coverage --isolate --coverage-reporter=text --coverage-reporter=lcov --preload ./src/dom-setup.ts --preload ./src/setup.ts"
+    "test": "bun run clean:coverage && bun test --coverage --isolate --coverage-reporter=text --coverage-reporter=lcov --preload ./src/dom-setup.ts --preload ./src/setup.ts --bail"
   },
   "lint-staged": {
     "*": "cspell --no-must-find-files",
@@ -64,7 +64,7 @@
     "@mantine/form": "^9.3.0",
     "@mantine/hooks": "^9.3.0",
     "@mantine/modals": "^9.3.0",
-    "@postfmly/logger": "^1.0.19",
+    "@postfmly/logger": "^1.0.20",
     "@tabler/icons-react": "^3.44.0",
     "dayjs": "^1.11.21",
     "filter-data": "^0.6.1",
@@ -83,7 +83,7 @@
     "@aryzing/bun-mock-fetch": "^1.2.0",
     "@faker-js/faker": "^10.4.0",
     "@happy-dom/global-registrator": "^20.10.2",
-    "@postfmly/config": "^1.4.0",
+    "@postfmly/config": "^1.4.1",
     "@tailwindcss/vite": "^4.3.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
