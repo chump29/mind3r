@@ -55,10 +55,10 @@ const validate = async <T>(obj: T): Promise<T> => {
 }
 
 /**
- * Show {@link https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API|Fetch API} error message
+ * Show {@link https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API Fetch API} error message
  * @class
  * @extends Error
- * @param {Response} response {@link https://developer.mozilla.org/en-US/docs/Web/API/Response|Response} object
+ * @param {Response} response {@link https://developer.mozilla.org/en-US/docs/Web/API/Response Response} object
  */
 class FetchError extends Error {
   constructor(response: Response) {
@@ -73,7 +73,7 @@ class FetchError extends Error {
 /**
  * Show custom error message
  * @function
- * @param {Error} e The {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error|Error} object
+ * @param {Error} e The {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error Error} object
  */
 const handleError = (e: Error): void => {
   if (e.message.includes("timed out")) {

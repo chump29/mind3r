@@ -1,6 +1,6 @@
 import { type ChangeEvent, type JSX, type RefObject, useEffect, useRef } from "react"
 
-import { error, info } from "@postfmly/logger"
+import { info } from "@postfmly/logger"
 
 import { default as pluralize } from "@jarrodek/pluralize"
 import {
@@ -20,7 +20,7 @@ import {
 } from "@mantine/core"
 import { DateTimePicker } from "@mantine/dates"
 import { useField, useForm } from "@mantine/form"
-import { useDisclosure } from "@mantine/hooks"
+import { useDisclosure, useLocalStorage } from "@mantine/hooks"
 import { modals } from "@mantine/modals"
 import {
   IconCancel,
@@ -42,7 +42,6 @@ import { filterData as filter, SearchType } from "filter-data"
 import { default as httpMethods } from "http-methods-constants"
 import { default as ms } from "ms"
 import { default as useSWR } from "swr/immutable"
-import { default as useLocalStorageState } from "use-local-storage-state"
 import { type SafeParseResult, safeParse } from "valibot"
 
 import { type IReminder } from "../shared/IReminder.ts"
@@ -73,8 +72,7 @@ import {
   setSortOrder
 } from "../shared/store.ts"
 
-import "@mantine/core/styles.layer.css"
-import "@mantine/dates/styles.layer.css"
+import "./index.css"
 
 dayjs.extend(advancedFormat)
 
@@ -160,16 +158,10 @@ const Display = (): JSX.Element => {
 
   const userValue: RefObject<string | null> = useRef<string | null>(null)
 
-  const [user, setUser, { removeItem: resetUser, isPersistent: useLocalStorage }] = useLocalStorageState<string | null>(
-    "mind3rUser",
-    {
-      defaultValue: undefined
-    }
-  )
-
-  if (!useLocalStorage) {
-    error("localStorage not being used")
-  }
+  const [user, setUser, resetUser] = useLocalStorage<string>({
+    defaultValue: undefined,
+    key: "mind3rUSer"
+  })
 
   const fetchData = async (url: string): Promise<IReminder[]> => {
     if (!user) {
@@ -530,7 +522,7 @@ const Display = (): JSX.Element => {
 
   const setUserAndRefresh = async (): Promise<void> => {
     new Promise<void>((resolve): void => {
-      setUser(userValue.current)
+      setUser(userValue.current ?? undefined)
 
       if (DEBUG) {
         info(`User logged in as ${userValue.current}`)
@@ -564,7 +556,7 @@ const Display = (): JSX.Element => {
       const u: SafeParseResult<UserSchema> = safeParse(UserSchema, user)
       const val: string | null = u.success ? u.output : null
       userValue.current = val
-      setUser(val)
+      setUser(val ?? undefined)
       if (DEBUG) {
         info(`User set to: ${val}`)
       }
@@ -644,7 +636,7 @@ const Display = (): JSX.Element => {
               data-testid="testLogin"
               leftSection={<IconKey color="yellow" size={16} />}
               onClick={(): void => {
-                userValue.current = user
+                userValue.current = user ?? null
                 openLogin()
                 nameField.setValue("")
                 nameField.validate()

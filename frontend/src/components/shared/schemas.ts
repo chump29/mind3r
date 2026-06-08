@@ -28,7 +28,7 @@ dayjs.extend(utc)
 /**
  * Validate against Semantic Versioning Specification
  * @function
- * @summary non-empty string, valid {@link https://semver.org/|SemVer}
+ * @summary non-empty string, valid {@link https://semver.org/ SemVer}
  */
 const VersionSchema = pipe(
   string(),
@@ -67,7 +67,7 @@ const MAX_LEN_EVENT: number = 50
  */
 const DATETIME_FORMAT: string = "dddd, MMMM Do @ h:mm A"
 
-const ROUND_TO_NEAREST_MINUTES: StringValue = "5m"
+const ROUND_TO_NEAREST_MINUTES: number = 5
 
 /**
  * Gets date/time
@@ -76,13 +76,19 @@ const ROUND_TO_NEAREST_MINUTES: StringValue = "5m"
  * @summary Rounds up to nearest {@link ROUND_TO_NEAREST_MINUTES} minutes
  */
 const getDateTime = (): string => {
-  return dayjs(Math.ceil(dayjs().valueOf() / ms(ROUND_TO_NEAREST_MINUTES)) * ms(ROUND_TO_NEAREST_MINUTES)).toISOString()
+  let round: number = ms(`${ROUND_TO_NEAREST_MINUTES}m`)
+
+  if (new Date().getMinutes() % ROUND_TO_NEAREST_MINUTES === 0) {
+    round += ms(`${ROUND_TO_NEAREST_MINUTES}m`)
+  }
+
+  return dayjs(Math.ceil(dayjs().valueOf() / round) * round).toISOString()
 }
 
 /**
  * Validate date-time
  * @function
- * @summary non-empty string, valid UTC {@link https://www.iso.org/iso-8601-date-and-time-format.html|ISO 8601} date-time
+ * @summary non-empty string, valid UTC {@link https://www.iso.org/iso-8601-date-and-time-format.html ISO 8601} date-time
  */
 const DateTimeSchema = pipe(
   string(),

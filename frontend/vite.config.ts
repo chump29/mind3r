@@ -15,7 +15,6 @@ import { ViteWebfontDownload as webFontDownload } from "vite-plugin-webfont-dl"
 export default defineConfig({
   build: {
     chunkSizeWarningLimit: 600,
-    cssMinify: "lightningcss",
     target: "esnext"
   },
   css: {
@@ -41,7 +40,10 @@ export default defineConfig({
       ],
       {
         assetsSubfolder: "fonts",
-        injectAsStyleTag: false
+        injectAsStyleTag: false,
+        subsetsAllowed: [
+          "latin"
+        ]
       }
     ),
     {
