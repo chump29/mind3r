@@ -96,7 +96,7 @@
     "browserslist": "^4.28.2",
     "cspell": "^10.0.1",
     "fdir-size": "^1.0.3",
-    "html-validate": "^11.5.2",
+    "html-validate": "^11.5.3",
     "http-status": "^2.1.0",
     "husky": "^9.1.7",
     "lcov-total": "^2.1.1",

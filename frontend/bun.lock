@@ -43,7 +43,7 @@
         "browserslist": "^4.28.2",
         "cspell": "^10.0.1",
         "fdir-size": "^1.0.3",
-        "html-validate": "^11.5.2",
+        "html-validate": "^11.5.3",
         "http-status": "^2.1.0",
         "husky": "^9.1.7",
         "lcov-total": "^2.1.1",
@@ -684,7 +684,7 @@
 
     "html-tags": ["html-tags@5.1.0", "https://npm.postfmly.com/html-tags/-/html-tags-5.1.0.tgz", {}, "sha512-n6l5uca7/y5joxZ3LUePhzmBFUJ+U2YWzhMa8XUTecSeSlQiZdF5XAd/Q3/WUl0VsXgUwWi8I7CNIwdI5WN1SQ=="],
 
-    "html-validate": ["html-validate@11.5.2", "https://npm.postfmly.com/html-validate/-/html-validate-11.5.2.tgz", { "dependencies": { "@html-validate/stylish": "^6.0.0", "@sidvind/better-ajv-errors": "7.0.0", "ajv": "^8.0.0", "kleur": "^4.1.0", "prompts": "^2.0.0", "semver": "^7.0.0" }, "peerDependencies": { "@jest/globals": "^29.0.3 || ^30.0.0", "@vitest/expect": "^3.0.0 || ^4.0.1", "jest": "^29.0.3 || ^30.0.0", "jest-snapshot": "^29.0.3 || ^30.0.0", "vitest": "^3.0.0 || ^4.0.1" }, "optionalPeers": ["@jest/globals", "@vitest/expect", "jest", "jest-snapshot", "vitest"], "bin": { "html-validate": "bin/html-validate.mjs" } }, "sha512-qOkPTxklpUTXzNeBVtB9/Ps6w1WPsOvyOK/lM/LQjrnhXMvtpkyMmaEtfbAngaAxjdulxiSxHvlOp5ikMAJYOw=="],
+    "html-validate": ["html-validate@11.5.3", "https://npm.postfmly.com/html-validate/-/html-validate-11.5.3.tgz", { "dependencies": { "@html-validate/stylish": "^6.0.0", "@sidvind/better-ajv-errors": "7.0.0", "ajv": "^8.0.0", "kleur": "^4.1.0", "prompts": "^2.0.0", "semver": "^7.0.0" }, "peerDependencies": { "@jest/globals": "^29.0.3 || ^30.0.0", "@vitest/expect": "^3.0.0 || ^4.0.1", "jest": "^29.0.3 || ^30.0.0", "jest-snapshot": "^29.0.3 || ^30.0.0", "vitest": "^3.0.0 || ^4.0.1" }, "optionalPeers": ["@jest/globals", "@vitest/expect", "jest", "jest-snapshot", "vitest"], "bin": { "html-validate": "bin/html-validate.mjs" } }, "sha512-YJAqUomHuND2ppz4QoRoWMm4tLHFxGTkqoBDiMjBm9pzictNkEB78q0yT3U9s6oiy9XoEmVC2QEQcube+fMw5g=="],
 
     "http-methods-constants": ["http-methods-constants@1.1.0", "https://npm.postfmly.com/http-methods-constants/-/http-methods-constants-1.1.0.tgz", {}, "sha512-Vo+/Vc1o/wETwIje5lF4t/IS4dOqHf4S4ianX8IZCtiZ+HeNBJiBHNExKDSw4sndZpbFu6w5Ot6FVqU/I/IBcQ=="],
 

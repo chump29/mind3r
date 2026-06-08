@@ -7,3 +7,4 @@
 - [x] Frontend tests
 - [x] Backend tests
 - [ ] Fix user input error validation
+- [ ] Refresh data when logging in

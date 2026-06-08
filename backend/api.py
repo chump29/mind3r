@@ -185,7 +185,9 @@ def delete_expired(user: str) -> None:
     """Delete expired reminders"""
     try:
         count: Final[int] = (
-            Reminder.delete().where(Reminder.user == user).where(datetime.now(UTC) >= Reminder.date).execute()
+            Reminder.delete()
+            .where(datetime.now(UTC) >= Reminder.date)
+            .execute()  # * NOTE: Delete all expired reminders
         )
         if count > 0:
             get_all_reminders.cache_clear()

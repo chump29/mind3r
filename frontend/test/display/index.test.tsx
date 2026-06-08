@@ -4,15 +4,20 @@ import { json, mockFetch, setPassthrough } from "@aryzing/bun-mock-fetch"
 import { fakerEN_US as fake } from "@faker-js/faker"
 import { MantineProvider } from "@mantine/core"
 import { ModalsProvider } from "@mantine/modals"
-import { act, render, screen, waitFor } from "@testing-library/react"
+import { act, configure, render, screen, waitFor } from "@testing-library/react"
 import { type UserEvent, default as userEvent } from "@testing-library/user-event"
 import { default as httpMethods } from "http-methods-constants"
+import { default as ms } from "ms"
 import { titleCase } from "title-case"
 
 import { default as Display } from "../../src/components/display/index.tsx"
 import { type IReminder } from "../../src/components/shared/IReminder.ts"
 import { displayStore } from "../../src/components/shared/store.ts"
 import { generateEvent, generateReminder, generateReminders, generateUser } from "../helpers.ts"
+
+configure({
+  asyncUtilTimeout: ms("3s")
+})
 
 const data: IReminder[] = await generateReminders()
 

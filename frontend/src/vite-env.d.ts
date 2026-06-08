@@ -6,6 +6,7 @@ interface ViteTypeOptions {
 
 interface ImportMetaEnv {
   readonly PACKAGE_VERSION: string
+  readonly VITE_API_TIMEOUT: string
   readonly VITE_API_URL: string
   readonly VITE_DEBUG: string
   readonly VITE_TITLE: string

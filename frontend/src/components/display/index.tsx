@@ -46,18 +46,19 @@ import { default as useLocalStorageState } from "use-local-storage-state"
 import { type SafeParseResult, safeParse } from "valibot"
 
 import { type IReminder } from "../shared/IReminder.ts"
+import { type IUser, vUserSchema } from "../shared/IUser.ts"
 import { FetchError, handleError, SortBy, SortOrder, validate } from "../shared/index.ts"
 import {
   BooleanSchema,
   DATETIME_FORMAT,
-  DateTimeSchema,
-  DescriptionSchema,
   EventSchema,
+  getDateTime,
   MAX_LEN_DESCRIPTION,
   MAX_LEN_EVENT,
   MAX_LEN_NAME,
   MAX_LEN_SEARCH,
   SearchSchema,
+  TimeoutSchema,
   UrlSchema,
   UserSchema
 } from "../shared/schemas.ts"
@@ -74,7 +75,6 @@ import {
 
 import "@mantine/core/styles.layer.css"
 import "@mantine/dates/styles.layer.css"
-import { type IUser, vUserSchema } from "../shared/IUser.ts"
 
 dayjs.extend(advancedFormat)
 
@@ -87,7 +87,8 @@ if (DEBUG) {
 const u: SafeParseResult<UrlSchema> = safeParse(UrlSchema, import.meta.env.VITE_API_URL)
 const API_URL: string = `${u.success ? u.output : ""}/api`
 
-const API_TIMEOUT: number = ms("3s")
+const t: SafeParseResult<TimeoutSchema> = safeParse(TimeoutSchema, import.meta.env.VITE_API_TIMEOUT)
+const API_TIMEOUT: number = t.success ? t.output : ms("2s")
 
 const Th = ({
   children,
@@ -135,21 +136,13 @@ const Display = (): JSX.Element => {
 
   const form = useForm<IReminder>({
     initialValues: {
-      date: dayjs().add(1, "m").toISOString(),
+      date: getDateTime(),
       description: null,
       event: "",
       id: null,
       user: null
     },
     validate: {
-      date: (s: string): string | null => {
-        const d: SafeParseResult<DateTimeSchema> = safeParse(DateTimeSchema, s)
-        return d.success ? null : d.issues[0].message
-      },
-      description: (s: string | null): string | null => {
-        const d: SafeParseResult<DescriptionSchema> = safeParse(DescriptionSchema, s)
-        return d.success ? null : d.issues[0].message
-      },
       event: (s: string): string | null => {
         const e: SafeParseResult<EventSchema> = safeParse(EventSchema, s)
         return e.success ? null : e.issues[0].message
@@ -534,7 +527,12 @@ const Display = (): JSX.Element => {
     const user: string | null = localStorage.getItem("mind3rUser")
     if (user) {
       const u: SafeParseResult<UserSchema> = safeParse(UserSchema, user)
-      setUser(u.success ? u.output : null)
+      const val: string | null = u.success ? u.output : null
+      userValue.current = val
+      setUser(val)
+      if (DEBUG) {
+        info(`User set to: ${val}`)
+      }
     }
   }, [])
 
@@ -555,7 +553,9 @@ const Display = (): JSX.Element => {
               if (e.key === "Enter") {
                 closeLogin()
                 setUser(userValue.current)
-                filterAndSort()
+                if (DEBUG) {
+                  info(`User set to: ${userValue.current}`)
+                }
               }
             }}
             placeholder="Enter name..."
@@ -566,10 +566,10 @@ const Display = (): JSX.Element => {
                   <IconCheck
                     color="green"
                     onClick={(): void => {
-                      if (userValue.current) {
-                        closeLogin()
-                        setUser(userValue.current)
-                        filterAndSort()
+                      closeLogin()
+                      setUser(userValue.current)
+                      if (DEBUG) {
+                        info(`User set to: ${userValue.current}`)
                       }
                     }}
                     size={16}
@@ -583,11 +583,10 @@ const Display = (): JSX.Element => {
                   <IconX
                     color="red"
                     onClick={(): void => {
+                      closeLogin()
                       if (userValue.current !== user) {
                         resetUser()
                       }
-                      closeLogin()
-                      filterAndSort()
                     }}
                     size={16}
                     style={{
@@ -630,9 +629,12 @@ const Display = (): JSX.Element => {
             <Tooltip label="Log Out" withArrow>
               <Anchor
                 c="blue"
-                onClick={(): void => {
+                onClick={async (): Promise<void> => {
                   resetUser()
-                  filterAndSort()
+                  if (DEBUG) {
+                    info("User logged out")
+                  }
+                  await refreshData()
                 }}>
                 {user}
               </Anchor>
@@ -777,11 +779,13 @@ const Display = (): JSX.Element => {
                     <Center>
                       <DateTimePicker
                         {...form.getInputProps("date")}
+                        error={dayjs(form.values.date) < dayjs(getDateTime())}
                         label="Date/Time"
-                        minDate={dayjs().toISOString()}
+                        minDate={getDateTime()}
                         onChange={(s: string | null): void => form.setFieldValue("date", dayjs(s).toISOString())}
                         timePickerProps={{
                           format: "12h",
+                          minutesStep: 5,
                           withDropdown: true,
                           popoverProps: {
                             withinPortal: false

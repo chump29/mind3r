@@ -1,5 +1,6 @@
 import { default as dayjs } from "dayjs"
 import { default as utc } from "dayjs/plugin/utc"
+import { default as ms, type StringValue } from "ms"
 import { valid } from "semver"
 import { titleCase } from "title-case"
 import {
@@ -13,6 +14,7 @@ import {
   nullable,
   number,
   pipe,
+  regex,
   string,
   toBoolean,
   transform,
@@ -65,16 +67,28 @@ const MAX_LEN_EVENT: number = 50
  */
 const DATETIME_FORMAT: string = "dddd, MMMM Do @ h:mm A"
 
+const ROUND_TO_NEAREST_MINUTES: StringValue = "5m"
+
 /**
- * Validate date/time
+ * Gets date/time
+ * @function
+ * @returns {string} The date/time
+ * @summary Rounds up to nearest {@link ROUND_TO_NEAREST_MINUTES} minutes
+ */
+const getDateTime = (): string => {
+  return dayjs(Math.ceil(dayjs().valueOf() / ms(ROUND_TO_NEAREST_MINUTES)) * ms(ROUND_TO_NEAREST_MINUTES)).toISOString()
+}
+
+/**
+ * Validate date-time
  * @function
  * @summary non-empty string, valid UTC {@link https://www.iso.org/iso-8601-date-and-time-format.html|ISO 8601} date-time
  */
 const DateTimeSchema = pipe(
   string(),
-  nonEmpty("This field is required"),
+  nonEmpty(),
   transform((s: string): string => dayjs(s).utc().toISOString()),
-  minValue(dayjs().add(1, "m").toISOString(), "Must be greater than the current date/time")
+  minValue(getDateTime())
 )
 
 type DateTimeSchema = typeof DateTimeSchema
@@ -188,18 +202,38 @@ const UrlSchema = pipe(string(), trim(), nonEmpty(), url())
 
 type UrlSchema = typeof UrlSchema
 
+const MIN_TIMEOUT: number = 200
+
+/**
+ * Validate API timeout
+ * @function
+ * @summary Converts string to milliseconds, min value = {@link MIN_TIMEOUT} ms
+ */
+const TimeoutSchema = pipe(
+  string(),
+  trim(),
+  nonEmpty(),
+  regex(/^\d+\w+$/i),
+  transform((s: string): number => ms(s as StringValue)),
+  minValue(MIN_TIMEOUT)
+)
+
+type TimeoutSchema = typeof TimeoutSchema
+
 export {
   BooleanSchema,
   DATETIME_FORMAT,
   DateTimeSchema,
   DescriptionSchema,
   EventSchema,
+  getDateTime,
   IdSchema,
   MAX_LEN_DESCRIPTION,
   MAX_LEN_EVENT,
   MAX_LEN_NAME,
   MAX_LEN_SEARCH,
   SearchSchema,
+  TimeoutSchema,
   UrlSchema,
   UserSchema,
   VersionSchema

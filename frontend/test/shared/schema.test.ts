@@ -14,6 +14,7 @@ import {
   MAX_LEN_EVENT,
   MAX_LEN_SEARCH,
   SearchSchema,
+  TimeoutSchema,
   UrlSchema,
   UserSchema,
   VersionSchema
@@ -41,7 +42,7 @@ describe("schema", (): void => {
     const d: SafeParseResult<DateTimeSchema> = safeParse(DateTimeSchema, date)
 
     expect(d.success).toBeFalse()
-    expect(d.issues?.[0].message).toInclude("greater than the current date/time")
+    expect(d.issues?.[0].message).toStartWith("Invalid value")
   })
 
   test("EventSchema", (): void => {
@@ -126,6 +127,21 @@ describe("schema", (): void => {
       fake.number.int({
         min: 1
       }),
+      fake.number.bigInt({
+        min: 1
+      }),
+      fake.number.float({
+        max: Number.MAX_VALUE,
+        min: Number.MIN_VALUE
+      }),
+      fake.number.int({
+        max: -Number.MIN_VALUE,
+        min: Number.MIN_SAFE_INTEGER
+      }),
+      fake.number.float({
+        max: -Number.MIN_VALUE,
+        min: -Number.MAX_VALUE
+      }),
       fake.word.sample(),
       [] as any[],
       {} as any
@@ -143,6 +159,8 @@ describe("schema", (): void => {
     const bools: any[] = [
       false,
       0,
+      -0,
+      0n,
       "",
       null,
       undefined,
@@ -168,5 +186,32 @@ describe("schema", (): void => {
 
     expect(u.success).toBeFalse()
     expect(u.issues?.[0].message).toStartWith("Invalid URL")
+  })
+
+  test("TimeoutSchema", (): void => {
+    expect(
+      safeParse(
+        TimeoutSchema,
+        fake.number.int({
+          min: 1
+        })
+      )
+    )
+  })
+
+  test("TimeoutSchema - fail format", (): void => {
+    const timeout: string = "0"
+    const t: SafeParseResult<TimeoutSchema> = safeParse(TimeoutSchema, timeout)
+
+    expect(t.success).toBeFalse()
+    expect(t.issues?.[0].message).toStartWith("Invalid format")
+  })
+
+  test("TimeoutSchema - fail number", (): void => {
+    const timeout: string = "0s"
+    const t: SafeParseResult<TimeoutSchema> = safeParse(TimeoutSchema, timeout)
+
+    expect(t.success).toBeFalse()
+    expect(t.issues?.[0].message).toContain(">=200")
   })
 })
