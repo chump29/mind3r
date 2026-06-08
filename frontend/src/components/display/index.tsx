@@ -19,7 +19,7 @@ import {
   UnstyledButton
 } from "@mantine/core"
 import { DateTimePicker } from "@mantine/dates"
-import { useForm } from "@mantine/form"
+import { useField, useForm } from "@mantine/form"
 import { useDisclosure } from "@mantine/hooks"
 import { modals } from "@mantine/modals"
 import {
@@ -148,6 +148,12 @@ const Display = (): JSX.Element => {
         return e.success ? null : e.issues[0].message
       }
     }
+  })
+
+  const nameField = useField<string>({
+    initialValue: "",
+    validateOnChange: true,
+    validate: (s: string): string | null => (s.length ? null : "Must enter a name")
   })
 
   const [openedLogin, { open: openLogin, close: closeLogin }] = useDisclosure(false)
@@ -522,6 +528,35 @@ const Display = (): JSX.Element => {
     )
   }
 
+  const setUserAndRefresh = async (): Promise<void> => {
+    new Promise<void>((resolve): void => {
+      setUser(userValue.current)
+
+      if (DEBUG) {
+        info(`User logged in as ${userValue.current}`)
+      }
+
+      resolve()
+    }).then(async (): Promise<void> => {
+      await refreshData()
+    })
+  }
+
+  const resetUserAndRefresh = async (): Promise<void> => {
+    new Promise<void>((resolve): void => {
+      userValue.current = null
+      resetUser()
+
+      if (DEBUG) {
+        info("User logged out")
+      }
+
+      resolve()
+    }).then(async (): Promise<void> => {
+      setFilteredData([])
+    })
+  }
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: loading from localStorage
   useEffect((): void => {
     const user: string | null = localStorage.getItem("mind3rUser")
@@ -541,36 +576,30 @@ const Display = (): JSX.Element => {
       <Modal centered onClose={closeLogin} opened={openedLogin} size="auto" withCloseButton={false}>
         <Tooltip label="Name" withArrow>
           <TextInput
+            {...nameField.getInputProps()}
             data-testid="testName"
-            error={!userValue.current}
             label="Name"
             maxLength={MAX_LEN_NAME}
             onChange={(e: ChangeEvent<HTMLInputElement>): void => {
               const u: SafeParseResult<UserSchema> = safeParse(UserSchema, e.target.value)
               userValue.current = u.success ? u.output : null
+              nameField.setValue(userValue.current ?? "")
             }}
-            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>): void => {
+            onKeyDown={async (e: React.KeyboardEvent<HTMLInputElement>): Promise<void> => {
               if (e.key === "Enter") {
                 closeLogin()
-                setUser(userValue.current)
-                if (DEBUG) {
-                  info(`User set to: ${userValue.current}`)
-                }
+                await setUserAndRefresh()
               }
             }}
             placeholder="Enter name..."
-            required
             rightSection={
               <>
                 <Tooltip label="Confirm" withArrow>
                   <IconCheck
                     color="green"
-                    onClick={(): void => {
+                    onClick={async (): Promise<void> => {
                       closeLogin()
-                      setUser(userValue.current)
-                      if (DEBUG) {
-                        info(`User set to: ${userValue.current}`)
-                      }
+                      await setUserAndRefresh()
                     }}
                     size={16}
                     style={{
@@ -597,7 +626,7 @@ const Display = (): JSX.Element => {
                 </Tooltip>
               </>
             }
-            value={user ?? undefined}
+            withAsterisk
           />
         </Tooltip>
       </Modal>
@@ -617,6 +646,8 @@ const Display = (): JSX.Element => {
               onClick={(): void => {
                 userValue.current = user
                 openLogin()
+                nameField.setValue("")
+                nameField.validate()
               }}
               size="xs"
               variant="outline">
@@ -630,11 +661,7 @@ const Display = (): JSX.Element => {
               <Anchor
                 c="blue"
                 onClick={async (): Promise<void> => {
-                  resetUser()
-                  if (DEBUG) {
-                    info("User logged out")
-                  }
-                  await refreshData()
+                  await resetUserAndRefresh()
                 }}>
                 {user}
               </Anchor>

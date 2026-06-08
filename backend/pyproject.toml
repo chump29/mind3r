@@ -1,14 +1,9 @@
 [build-system]
-requires = ["uv_build>=0.11,<0.12"]
 build-backend = "uv_build"
+requires = ["uv_build>=0.11,<0.12"]
 
 [project]
-name = "mind3r-backend"
-version = "1.0.0"
-description = "Reminders (Backend)"
-license = "GPL-3.0-only"
 authors = [{ name = "Chris Post", email = "admin@postfmly.com" }]
-keywords = ["reminder"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Web Environment :: Mozilla",
@@ -35,7 +30,12 @@ dependencies = [
     "semver>=3.0.4",
     "str2bool3>=1.3.0",
 ]
+description = "Reminders (Backend)"
+keywords = ["reminder"]
+license = "GPL-3.0-only"
+name = "mind3r-backend"
 requires-python = ">=3.14"
+version = "1.0.0"
 
 [project.urls]
 GitHub = "https://github.com/chump29/mind3r"
@@ -52,7 +52,7 @@ dev = [
 ]
 
 [tool.coverage.json]
-output = ".coverage.json"
+output = "coverage/coverage.json"
 
 [tool.coverage.report]
 exclude_also = [
@@ -69,6 +69,7 @@ precision = 2
 show_missing = true
 
 [tool.coverage.run]
+data_file = "coverage/.coverage"
 omit = ["features/**/*.py"]
 
 [tool.pylint.master]

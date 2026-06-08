@@ -1,5 +1,4 @@
 __pycache__/
-.coverage*
 .env.local
 .ruff_cache/
 .venv/

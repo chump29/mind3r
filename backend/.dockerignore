@@ -1,5 +1,4 @@
 __pycache__/
-.coverage*
 .dockerignore
 .pre-commit-config.yaml
 .python-version
@@ -7,6 +6,7 @@ __pycache__/
 .venv/
 *.sh
 api.rest
+coverage/
 db/
 Dockerfile
 features/

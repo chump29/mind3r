@@ -113,8 +113,8 @@ for _env in frontend backend; do
     echo -e " • uv: $_uv"
 
     _coverage=-1
-    if [ -f ".coverage.json" ]; then
-      _coverage=$(jq -r .totals.percent_statements_covered_display .coverage.json)
+    if [ -f "coverage/coverage.json" ]; then
+      _coverage=$(jq -r .totals.percent_statements_covered_display coverage/coverage.json)
     fi
     export _coverage
     echo -e "\n☂️  Coverage: $_coverage%"
