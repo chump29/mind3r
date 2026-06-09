@@ -2,9 +2,7 @@ import { appendFile, readdir } from "node:fs/promises"
 
 import { default as tailwindCSS } from "@tailwindcss/vite"
 import { default as react } from "@vitejs/plugin-react"
-import { default as browserslist } from "browserslist"
 import { default as getDirSize } from "fdir-size"
-import { browserslistToTargets } from "lightningcss"
 import { default as prettyBytes } from "pretty-bytes"
 import { default as removeAttributes } from "rollup-plugin-jsx-remove-attributes"
 import { defineConfig } from "vite"
@@ -14,12 +12,21 @@ import { ViteWebfontDownload as webFontDownload } from "vite-plugin-webfont-dl"
 
 export default defineConfig({
   build: {
-    chunkSizeWarningLimit: 600,
-    target: "esnext"
-  },
-  css: {
-    lightningcss: {
-      targets: browserslistToTargets(browserslist("last 1 version"))
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              name: "mantine",
+              test: "@mantine"
+            },
+            {
+              name: "react",
+              test: "react"
+            }
+          ]
+        }
+      }
     }
   },
   plugins: [
