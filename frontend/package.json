@@ -31,7 +31,7 @@
     "lint:env": "dotenv-linter check .",
     "lint:html": "html-validate *.html",
     "lint:spell": "cspell --dot --verbose .",
-    "lint:spell:ci": "cspell --dot --verbose --stop-config-search-at ./node_modules/@postfmly/config/.vscode .",
+    "lint:spell:ci": "cspell --dot --verbose --config ./node_modules/@postfmly/config/.vscode/cspell.json .",
     "prepare": "cd .. && husky frontend/.husky",
     "prod": "bun run build && cd dist && bunx serve",
     "scan": "bunx cve-lite-cli",
