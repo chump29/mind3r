@@ -30,6 +30,6 @@ type ReminderSchema = typeof ReminderSchema
  * @interface IReminder
  * @see {@link ReminderSchema}
  */
-type IReminder = InferInput<typeof ReminderSchema>
+type IReminder = InferInput<ReminderSchema>
 
 export { type IReminder, ReminderSchema }

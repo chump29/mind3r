@@ -18,6 +18,6 @@ type vUserSchema = typeof vUserSchema
  * @interface IUser
  * @see {@link vUserSchema}
  */
-type IUser = InferInput<typeof vUserSchema>
+type IUser = InferInput<vUserSchema>
 
 export { type IUser, vUserSchema }
