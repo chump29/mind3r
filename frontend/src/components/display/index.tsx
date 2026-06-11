@@ -160,7 +160,7 @@ const Display = (): JSX.Element => {
 
   const [user, setUser, resetUser] = useLocalStorage<string>({
     defaultValue: undefined,
-    key: "mind3rUSer"
+    key: "mind3rUser"
   })
 
   const fetchData = async (url: string): Promise<IReminder[]> => {

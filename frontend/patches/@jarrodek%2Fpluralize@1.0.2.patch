@@ -1,13 +1,13 @@
-diff --git a/src/pluralize.ts b/src/pluralize.ts
-index 454f7d04f8a6267f10a90084b041b6958de4c848..d693479999ccf3cc7f3816cf3894f39dc27393fe 100644
---- a/src/pluralize.ts
-+++ b/src/pluralize.ts
-@@ -235,7 +235,7 @@ function checkWord(replaceMap: Record<string, string>, keepMap: Record<string, s
+diff --git a/dist/pluralize.js b/dist/pluralize.js
+index 3eccf12f8d656480d6ac4c107d8981d5566099d6..644ccf3098274d2ea0399a5d7390f8143141abb8 100644
+--- a/dist/pluralize.js
++++ b/dist/pluralize.js
+@@ -123,7 +123,7 @@ function checkWord(replaceMap, keepMap, rules) {
   */
- const pluralize = function (word: string, count?: number, inclusive?: boolean) {
-   const pluralized = count === 1 ? pluralize.singular(word) : pluralize.plural(word)
--  return (inclusive ? count + ' ' : '') + pluralized
-+  return (inclusive ? count?.toLocaleString() + ' ' : '') + pluralized
- } as Pluralize
- 
+ const pluralize = function (word, count, inclusive) {
+     const pluralized = count === 1 ? pluralize.singular(word) : pluralize.plural(word);
+-    return (inclusive ? count + ' ' : '') + pluralized;
++    return (inclusive && count ? count.toLocaleString() + ' ' : '') + pluralized;
+ };
  /**
+  * Returns the plural form of a word.
