@@ -196,7 +196,7 @@ const Display = (): JSX.Element => {
           return []
         }
 
-        reminders = await validate<IReminder[]>(reminders)
+        reminders = validate<IReminder[]>(reminders)
 
         if (DEBUG) {
           info(`Got ${pluralize("reminder", reminders.length, true)} from API`)
@@ -379,7 +379,7 @@ const Display = (): JSX.Element => {
 
     reminder.user = user
 
-    const r: IReminder = await validate<IReminder>(reminder)
+    const r: IReminder = validate<IReminder>(reminder)
 
     if (editing) {
       if (editing.date === r.date && editing.event === r.event && editing.description === r.description) {
@@ -415,7 +415,7 @@ const Display = (): JSX.Element => {
             throw new Error(`Could not update reminder ID ${(editing satisfies IReminder).id}`)
           }
 
-          reminder = await validate<IReminder>(reminder)
+          reminder = validate<IReminder>(reminder)
 
           if (DEBUG) {
             info(`Updated reminder ID ${reminder.id}`)
@@ -450,7 +450,7 @@ const Display = (): JSX.Element => {
             throw new Error(`Could not add reminder: ${r.event}`)
           }
 
-          reminder = await validate<IReminder>(reminder)
+          reminder = validate<IReminder>(reminder)
 
           if (DEBUG) {
             info(`Added reminder ID ${reminder.id}`)

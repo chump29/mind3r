@@ -5,10 +5,10 @@ import { type SafeParseResult, safeParse } from "valibot"
 import { type IReminder, ReminderSchema } from "../../src/components/shared/IReminder.ts"
 import { generateReminder } from "../helpers.ts"
 
-describe("IReminder", async (): Promise<void> => {
-  const reminder: IReminder = await generateReminder()
+describe("IReminder", (): void => {
+  const reminder: IReminder = generateReminder()
 
-  test("should validate object", async (): Promise<void> => {
+  test("should validate object", (): void => {
     expect(safeParse(ReminderSchema, reminder).success).toBeTrue()
   })
 

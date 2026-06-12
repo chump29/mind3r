@@ -23,15 +23,23 @@ if (v.success) {
   error("Could not parse UI version", summarize(v.issues))
 }
 
-version = await getVersion(version)
+version = getVersion(version)
 
 if (DEBUG) {
   info(`Got UI version: ${version}`)
 }
 
-;(await findElement("#frontend")).textContent = version
+const frontend: HTMLElement | null = findElement("#frontend")
+if (frontend) {
+  frontend.textContent = version
+} else {
+  error("Could not find frontend version element")
+}
 
-const obj: HTMLElement = await findElement("#backend")
+const backend: HTMLElement | null = findElement("#backend")
+if (!backend) {
+  error("Could not find backend version element")
+}
 
 const u: SafeParseResult<UrlSchema> = safeParse(UrlSchema, import.meta.env.VITE_API_URL)
 const API_URL: string = `${u.success ? u.output : ""}/api`
@@ -59,16 +67,21 @@ fetch(`${API_URL}/version`, {
       throw new Error("Could not parse API version")
     }
 
-    version = await getVersion(version)
+    version = getVersion(version)
 
     if (DEBUG) {
       info(`Got API version: ${version}`)
     }
 
-    obj.textContent = version
+    if (backend) {
+      backend.textContent = version
+    }
   })
   .catch((e: unknown): void => {
-    obj.textContent = "N/A"
+    if (backend) {
+      backend.textContent = "N/A"
+    }
+
     if (e instanceof Error && (e satisfies Error).name === "TimeoutError") {
       error("Timed out getting API version")
     } else {
@@ -76,12 +89,17 @@ fetch(`${API_URL}/version`, {
     }
   })
 
-createRoot(await findElement("#root")).render(
-  <StrictMode>
-    <MantineProvider defaultColorScheme="dark">
-      <ModalsProvider>
-        <Display />
-      </ModalsProvider>
-    </MantineProvider>
-  </StrictMode>
-)
+const root: HTMLElement | null = findElement("#root")
+if (root) {
+  createRoot(root).render(
+    <StrictMode>
+      <MantineProvider defaultColorScheme="dark">
+        <ModalsProvider>
+          <Display />
+        </ModalsProvider>
+      </MantineProvider>
+    </StrictMode>
+  )
+} else {
+  error("Could not find root element")
+}

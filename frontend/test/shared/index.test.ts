@@ -9,28 +9,24 @@ import { FetchError, findElement, getVersion, handleError, validate } from "../.
 import { generateReminder, generateReminders } from "../helpers.ts"
 
 describe("index", (): void => {
-  test("findElement", async (): Promise<void> => {
+  test("findElement", (): void => {
     document.body.innerHTML = '<div id="test">test</div>'
 
-    expect((await findElement("#test")).textContent).toBe("test")
+    expect(findElement("#test")?.textContent).toBe("test")
   })
 
-  test("findElement - error", (): void => {
-    document.body.innerHTML = "<div>test</div>"
-
-    const element: string = "#test"
-
-    expect(findElement(element)).rejects.toThrowError(`Could not find element: ${element}`)
+  test("findElement - fail", (): void => {
+    expect(findElement("#nop")).toBeNull()
   })
 
   test("getVersion", (): void => {
     const version: string = fake.system.semver()
 
-    expect(getVersion(version)).resolves.toBe(`v${version}`)
+    expect(getVersion(version)).toBe(`v${version}`)
   })
 
   test("getVersion - empty", (): void => {
-    expect(getVersion(undefined)).resolves.toBe("N/A")
+    expect(getVersion(undefined)).toBe("N/A")
   })
 
   // * NOTE: remapping because of case transformation on event title
@@ -50,22 +46,22 @@ describe("index", (): void => {
     }
   }
 
-  test("validate", async (): Promise<void> => {
-    const reminder: IReminder = await generateReminder()
+  test("validate", (): void => {
+    const reminder: IReminder = generateReminder()
 
-    expect(validate<IReminder>(reminder)).resolves.toEqual(remap<IReminder>(reminder))
+    expect(validate<IReminder>(reminder)).toEqual(remap<IReminder>(reminder))
   })
 
-  test("validate - array", async (): Promise<void> => {
-    const reminders: IReminder[] = await generateReminders()
+  test("validate - array", (): void => {
+    const reminders: IReminder[] = generateReminders()
 
-    const validatedReminders: IReminder[] = await validate<IReminder[]>(reminders)
+    const validatedReminders: IReminder[] = validate<IReminder[]>(reminders)
 
     expect(validatedReminders).toEqual(remap<IReminder[]>(reminders))
   })
 
   test("validate - error", (): void => {
-    expect(validate(null)).rejects.toThrowError()
+    expect((): null => validate(null)).toThrowError()
   })
 
   test("fetchError", (): void => {

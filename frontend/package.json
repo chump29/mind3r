@@ -35,7 +35,7 @@
     "prepare": "cd .. && husky frontend/.husky",
     "prod": "bun run build && cd dist && bunx serve",
     "scan": "bunx cve-lite-cli",
-    "test": "bun test --coverage --isolate --coverage-reporter=text --coverage-reporter=lcov --preload ./src/dom-setup.ts --preload ./src/setup.ts --bail"
+    "test": "bun test --coverage --isolate --coverage-reporter=text --coverage-reporter=lcov --preload ./test/dom-setup.ts --preload ./test/setup.ts --bail"
   },
   "lint-staged": {
     "*": "cspell --no-must-find-files",

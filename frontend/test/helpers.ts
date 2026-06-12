@@ -36,7 +36,7 @@ const generateUser = (): string => {
 
 let MAX_ID: number = 1
 
-const reminderData = async (): Promise<IReminder> => {
+const reminderData = (): IReminder => {
   return {
     date: fake.date.future().toISOString(),
     description: truncate(fake.lorem.sentence(), MAX_LEN_DESCRIPTION),
@@ -52,30 +52,28 @@ const reminderData = async (): Promise<IReminder> => {
  * @function
  * @returns {IReminder} Reminder data
  */
-const generateReminder = async (): Promise<IReminder> => {
-  return await validate(await reminderData())
+const generateReminder = (): IReminder => {
+  return validate(reminderData())
 }
 
 const DEFAULT_NUM_REMINDERS: number = 3
 
 /**
  * Generate fake array of Reminder data
- * @async
  * @function
  * @param {number} [num=3] - The number of Reminder objects
  * @returns {IReminder[]} Array of Reminder data
  */
-const generateReminders = async (num: number = DEFAULT_NUM_REMINDERS): Promise<IReminder[]> => {
+const generateReminders = (num: number = DEFAULT_NUM_REMINDERS): IReminder[] => {
   const reminders: IReminder[] = []
 
   for (let x = 0; x < num; x++) {
-    // biome-ignore lint/performance/noAwaitInLoops: retain the order
-    const r: IReminder = await reminderData()
+    const r: IReminder = reminderData()
 
     reminders.push(r)
   }
 
-  return await validate(reminders)
+  return validate(reminders)
 }
 
 export { generateDescription, generateEvent, generateReminder, generateReminders, generateUser }

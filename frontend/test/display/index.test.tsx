@@ -19,9 +19,9 @@ configure({
   asyncUtilTimeout: ms("3s")
 })
 
-const data: IReminder[] = await generateReminders()
+const data: IReminder[] = generateReminders()
 
-const newData: IReminder = await generateReminder()
+const newData: IReminder = generateReminder()
 
 beforeAll((): void => {
   setPassthrough(false)

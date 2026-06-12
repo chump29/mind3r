@@ -15,8 +15,8 @@ import {
 } from "../../src/components/shared/store.ts"
 import { generateReminders } from "../helpers.ts"
 
-describe("store", async (): Promise<void> => {
-  const reminders: IReminder[] = await generateReminders()
+describe("store", (): void => {
+  const reminders: IReminder[] = generateReminders()
 
   test("setEditing", (): void => {
     const reminder: IReminder = reminders[0] as IReminder

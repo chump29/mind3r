@@ -6,40 +6,33 @@ import { type IReminder, ReminderSchema } from "./IReminder.ts"
 
 /**
  * Find DOM element
- * @async
  * @function
  * @param {string} element - element identifier
  * @returns {Promise<HTMLElement>} DOM element
  * @throws {Error} If element not found
  */
-const findElement = async (element: string): Promise<HTMLElement> => {
-  const e: HTMLElement | null = document.querySelector(element)
-  if (!e) {
-    throw new Error(`Could not find element: ${element}`)
-  }
-  return e
+const findElement = (element: string): HTMLElement | null => {
+  return document.querySelector(element)
 }
 
 /**
  * Format version string
- * @async
  * @function
  * @param {string | undefined} version - version string
  * @returns {Promise<string>} v[version], or N/A if undefined
  */
-const getVersion = async (version: string | undefined): Promise<string> => {
+const getVersion = (version: string | undefined): string => {
   return version ? `v${version}` : "N/A"
 }
 
 /**
  * Validate {@link IReminder} object or array
- * @async
  * @function
  * @param {T} obj IReminder object or array
  * @returns {T} Validated IReminder object or array
  * @throws {Error} If validation fails
  */
-const validate = async <T>(obj: T): Promise<T> => {
+const validate = <T>(obj: T): T => {
   let r: SafeParseResult<ReminderSchema | ArraySchema<ReminderSchema, string>>
   if (Array.isArray(obj)) {
     r = safeParse(array(ReminderSchema), obj)
