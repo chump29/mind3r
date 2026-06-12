@@ -9,8 +9,8 @@ const user: IUser = {
   user: generateUser()
 } satisfies IUser
 
-describe("IUser", async (): Promise<void> => {
-  test("should validate object", async (): Promise<void> => {
+describe("IUser", (): void => {
+  test("should validate object", (): void => {
     expect(safeParse(vUserSchema, user).success).toBeTrue()
   })
 

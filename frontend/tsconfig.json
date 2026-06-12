@@ -9,5 +9,9 @@
       "react-dom",
       "semver"
     ]
-  }
+  },
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
 }

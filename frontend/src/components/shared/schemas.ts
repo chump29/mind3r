@@ -36,7 +36,7 @@ const VersionSchema = pipe(
   nonEmpty(),
   transform((s: string): string => s.replaceAll('"', "")),
   check(
-    (s: string): boolean => (valid(s) ? true : false),
+    (s: string): boolean => valid(s) !== null,
     (e: CheckIssue<string>): string => `Invalid SemVer: ${e.input}`
   )
 )
@@ -126,7 +126,7 @@ const DescriptionSchema = nullable(
     trim(),
     nonEmpty(),
     maxLength(MAX_LEN_DESCRIPTION),
-    transform((s: string): string | null => (!s.length ? null : s))
+    transform((s: string): string | null => (s.length > 0 ? s : null))
   )
 )
 

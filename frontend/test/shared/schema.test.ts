@@ -147,12 +147,12 @@ describe("schema", (): void => {
       {} as any
     ]
 
-    bools.forEach((bool: any): void => {
+    for (const bool of bools) {
       const b: SafeParseResult<BooleanSchema> = safeParse(BooleanSchema, bool)
 
       expect(b.success).toBeTrue()
       expect(b.output).toBeTrue()
-    })
+    }
   })
 
   test("BooleanSchema - false", (): void => {
@@ -164,15 +164,15 @@ describe("schema", (): void => {
       "",
       null,
       undefined,
-      NaN
+      Number.NaN
     ]
 
-    bools.forEach((bool: any): void => {
+    for (const bool of bools) {
       const b: SafeParseResult<BooleanSchema> = safeParse(BooleanSchema, bool)
 
       expect(b.success).toBeTrue()
       expect(b.output).toBeFalse()
-    })
+    }
   })
   // biome-ignore-end lint/suspicious/noExplicitAny: allow for testing
 

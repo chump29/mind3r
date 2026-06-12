@@ -1,4 +1,4 @@
-import { type ChangeEvent, type JSX, type RefObject, useEffect, useRef } from "react"
+import { type ChangeEvent, type JSX, type KeyboardEvent, type RefObject, useEffect, useRef } from "react"
 
 import { info } from "@postfmly/logger"
 
@@ -76,17 +76,17 @@ import "./index.css"
 
 dayjs.extend(advancedFormat)
 
-const d: SafeParseResult<BooleanSchema> = safeParse(BooleanSchema, import.meta.env.VITE_DEBUG)
-const DEBUG: boolean = d.success ? d.output : false
+const debug: SafeParseResult<BooleanSchema> = safeParse(BooleanSchema, import.meta.env.VITE_DEBUG)
+const DEBUG: boolean = debug.success ? debug.output : false
 if (DEBUG) {
   info("Debug is ON")
 }
 
-const u: SafeParseResult<UrlSchema> = safeParse(UrlSchema, import.meta.env.VITE_API_URL)
-const API_URL: string = `${u.success ? u.output : ""}/api`
+const api_url: SafeParseResult<UrlSchema> = safeParse(UrlSchema, import.meta.env.VITE_API_URL)
+const API_URL: string = `${api_url.success ? api_url.output : ""}/api`
 
-const t: SafeParseResult<TimeoutSchema> = safeParse(TimeoutSchema, import.meta.env.VITE_API_TIMEOUT)
-const API_TIMEOUT: number = t.success ? t.output : ms("2s")
+const api_timeout: SafeParseResult<TimeoutSchema> = safeParse(TimeoutSchema, import.meta.env.VITE_API_TIMEOUT)
+const API_TIMEOUT: number = api_timeout.success ? api_timeout.output : ms("2s")
 
 const Th = ({
   children,
@@ -101,11 +101,12 @@ const Th = ({
   sorted: boolean
   onSort: () => void
 }): JSX.Element => {
-  const Icon = sorted ? (reversed ? IconChevronUp : IconChevronDown) : IconSelector
+  const upDownIcon = reversed ? IconChevronUp : IconChevronDown
+  const Icon = sorted ? upDownIcon : IconSelector
 
   return (
     <Table.Th p={0} ta="center">
-      <Tooltip label={`Sort by ${label}`} withArrow>
+      <Tooltip label={`Sort by ${label}`} withArrow={true}>
         <UnstyledButton onClick={onSort}>
           <Group justify="space-between">
             <Text fw="bold">{children}</Text>
@@ -151,7 +152,7 @@ const Display = (): JSX.Element => {
   const nameField = useField<string>({
     initialValue: "",
     validateOnChange: true,
-    validate: (s: string): string | null => (s.length ? null : "Must enter a name")
+    validate: (s: string): string | null => (s.length > 0 ? null : "Must enter a name")
   })
 
   const [openedLogin, { open: openLogin, close: closeLogin }] = useDisclosure(false)
@@ -169,7 +170,7 @@ const Display = (): JSX.Element => {
     }
 
     const userObj: IUser = {
-      user: user
+      user
     } satisfies IUser
     const u: SafeParseResult<vUserSchema> = safeParse(vUserSchema, userObj)
     if (!u.success) {
@@ -191,18 +192,18 @@ const Display = (): JSX.Element => {
 
         return await response.json()
       })
-      .then(async (reminders: IReminder[]): Promise<IReminder[]> => {
+      .then((reminders: IReminder[] | null): IReminder[] => {
         if (!reminders) {
           return []
         }
 
-        reminders = validate<IReminder[]>(reminders)
+        const r: IReminder[] = validate<IReminder[]>(reminders)
 
         if (DEBUG) {
-          info(`Got ${pluralize("reminder", reminders.length, true)} from API`)
+          info(`Got ${pluralize("reminder", r.length, true)} from API`)
         }
 
-        return reminders
+        return r
       })
       .catch((e: Error): IReminder[] => {
         handleError(e)
@@ -211,8 +212,8 @@ const Display = (): JSX.Element => {
   }
 
   const { data = [], mutate: refreshData } = useSWR(user ? `${API_URL}/get` : null, fetchData, {
-    onSuccess: (data: IReminder[]): void => {
-      setFilteredData(data)
+    onSuccess: (d: IReminder[]): void => {
+      setFilteredData(d)
 
       handleSort(SortBy.DATE, SortOrder.ASC)
     }
@@ -251,54 +252,57 @@ const Display = (): JSX.Element => {
     }
   }
 
-  const handleSort = (sb: SortBy = SortBy.DATE, so: SortOrder | null = null): void => {
-    if (so) {
-      setSortOrder(so)
-    } else if (sb === sortBy) {
-      setSortOrder(sortOrder === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC)
-    } else {
-      setSortOrder(SortOrder.ASC)
-    }
+  const handleSort =
+    (sb: SortBy = SortBy.DATE, so: SortOrder | null = null) =>
+    (): void => {
+      if (so) {
+        setSortOrder(so)
+      } else if (sb === sortBy) {
+        setSortOrder(sortOrder === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC)
+      } else {
+        setSortOrder(SortOrder.ASC)
+      }
 
-    setSortBy(sb)
+      setSortBy(sb)
 
-    const currentSortBy: SortBy = displayStore.getState().sortBy
-    const currentSortOrder: SortOrder = displayStore.getState().sortOrder
+      const currentSortBy: SortBy = displayStore.getState().sortBy
+      const currentSortOrder: SortOrder = displayStore.getState().sortOrder
 
-    if (DEBUG) {
-      info(
-        `Sort by: ${currentSortBy === SortBy.DATE ? "Date/Time" : "Event"} (${currentSortOrder === SortOrder.ASC ? "ASC" : "DESC"})`
-      )
-    }
+      if (DEBUG) {
+        info(
+          `Sort by: ${currentSortBy === SortBy.DATE ? "Date/Time" : "Event"} (${currentSortOrder === SortOrder.ASC ? "ASC" : "DESC"})`
+        )
+      }
 
-    setFilteredData(
-      displayStore.getState().filteredData.sort((a: IReminder, b: IReminder): number => {
-        if (currentSortBy === SortBy.EVENT) {
-          if (currentSortOrder === SortOrder.ASC) {
-            return a.event.localeCompare(b.event)
+      setFilteredData(
+        displayStore.getState().filteredData.sort((a: IReminder, b: IReminder): number => {
+          if (currentSortBy === SortBy.EVENT) {
+            if (currentSortOrder === SortOrder.ASC) {
+              return a.event.localeCompare(b.event)
+            }
+            return b.event.localeCompare(a.event)
           }
-          return b.event.localeCompare(a.event)
-        } else {
           if (currentSortOrder === SortOrder.ASC) {
             return dayjs(a.date).diff(dayjs(b.date))
           }
           return dayjs(b.date).diff(dayjs(a.date))
-        }
-      })
-    )
+        })
+      )
 
-    if (DEBUG) {
-      info(`Sorted ${pluralize("reminder", displayStore.getState().filteredData.length, true)}`)
+      if (DEBUG) {
+        info(`Sorted ${pluralize("reminder", displayStore.getState().filteredData.length, true)}`)
+      }
     }
-  }
 
-  const filterAndSort = (value: string = ""): void => {
-    setSearch(value) // * NOTE: already validated
+  const filterAndSort =
+    (value: string = "") =>
+    (): void => {
+      setSearch(value) // * NOTE: already validated
 
-    filterData()
+      filterData()
 
-    handleSort(sortBy, sortOrder)
-  }
+      handleSort(sortBy, sortOrder)
+    }
 
   const handleCancel = (): void => {
     setIsAdding(false)
@@ -308,43 +312,45 @@ const Display = (): JSX.Element => {
     form.reset()
   }
 
-  const showConfirm = async (id: number, skipConfirm: boolean = false): Promise<void> => {
-    if (skipConfirm) {
-      await handleDelete(id)
-      return
-    }
-
-    modals.openConfirmModal({
-      centered: true,
-      children: (
-        <Text size="sm">Are you sure that you want to delete this reminder? This action cannot be undone.</Text>
-      ),
-      title: "Delete reminder?",
-      cancelProps: {
-        "data-testid": "testCancel"
-      },
-      confirmProps: {
-        color: "red",
-        "data-testid": "testConfirm"
-      },
-      labels: {
-        cancel: "Do not delete",
-        confirm: "Delete reminder"
-      },
-      onCancel: (): void => {
-        if (DEBUG) {
-          info("Delete canceled")
-        }
-      },
-      onConfirm: async (): Promise<void> => {
-        if (DEBUG) {
-          info("Delete confirmed")
-        }
-
+  const showConfirm =
+    (id: number, skipConfirm: boolean = false) =>
+    async (): Promise<void> => {
+      if (skipConfirm) {
         await handleDelete(id)
+        return
       }
-    })
-  }
+
+      modals.openConfirmModal({
+        centered: true,
+        children: (
+          <Text size="sm">Are you sure that you want to delete this reminder? This action cannot be undone.</Text>
+        ),
+        title: "Delete reminder?",
+        cancelProps: {
+          "data-testid": "testCancel"
+        },
+        confirmProps: {
+          color: "red",
+          "data-testid": "testConfirm"
+        },
+        labels: {
+          cancel: "Do not delete",
+          confirm: "Delete reminder"
+        },
+        onCancel: (): void => {
+          if (DEBUG) {
+            info("Delete canceled")
+          }
+        },
+        onConfirm: async (): Promise<void> => {
+          if (DEBUG) {
+            info("Delete confirmed")
+          }
+
+          await handleDelete(id)
+        }
+      })
+    }
 
   const handleDelete = async (id: number): Promise<void> => {
     await fetch(`${API_URL}/delete/${id}`, {
@@ -410,15 +416,15 @@ const Display = (): JSX.Element => {
 
           return await response.json()
         })
-        .then(async (reminder: IReminder): Promise<void> => {
-          if (!reminder) {
+        .then(async (reminderObj: IReminder): Promise<void> => {
+          if (!reminderObj) {
             throw new Error(`Could not update reminder ID ${(editing satisfies IReminder).id}`)
           }
 
-          reminder = validate<IReminder>(reminder)
+          const validatedReminder: IReminder = validate<IReminder>(reminderObj)
 
           if (DEBUG) {
-            info(`Updated reminder ID ${reminder.id}`)
+            info(`Updated reminder ID ${validatedReminder.id}`)
           }
 
           await refreshData()
@@ -445,15 +451,15 @@ const Display = (): JSX.Element => {
 
           return await response.json()
         })
-        .then(async (reminder: IReminder): Promise<void> => {
-          if (!reminder) {
+        .then(async (reminderObj: IReminder): Promise<void> => {
+          if (!reminderObj) {
             throw new Error(`Could not add reminder: ${r.event}`)
           }
 
-          reminder = validate<IReminder>(reminder)
+          const validatedReminder: IReminder = validate<IReminder>(reminderObj)
 
           if (DEBUG) {
-            info(`Added reminder ID ${reminder.id}`)
+            info(`Added reminder ID ${validatedReminder.id}`)
           }
 
           await refreshData()
@@ -464,14 +470,14 @@ const Display = (): JSX.Element => {
     handleCancel()
   }
 
-  const handleEdit = (id: number): void => {
-    const reminder: IReminder | undefined = data.find((reminder: IReminder): boolean => reminder.id === id)
-    if (reminder) {
+  const handleEdit = (id: number) => (): void => {
+    const foundReminder: IReminder | undefined = data.find((reminder: IReminder): boolean => reminder.id === id)
+    if (foundReminder) {
       setIsAdding(true)
 
-      setEditing(reminder)
+      setEditing(foundReminder)
 
-      form.setValues(reminder)
+      form.setValues(foundReminder)
 
       if (DEBUG) {
         info(`Editing reminder ID ${id}`)
@@ -479,8 +485,8 @@ const Display = (): JSX.Element => {
     }
   }
 
-  const getRows = (): JSX.Element[] => {
-    return filteredData.map(
+  const getRows = (): JSX.Element[] =>
+    filteredData.map(
       (row: IReminder): JSX.Element => (
         <Table.Tr key={row.id}>
           <Table.Td ta="center" w={300}>
@@ -495,21 +501,21 @@ const Display = (): JSX.Element => {
             {row.description}
           </Table.Td>
           <Table.Td ta="center" w={100}>
-            <Tooltip label="Edit" withArrow>
+            <Tooltip label="Edit" withArrow={true}>
               <ActionIcon
                 color="var(--color-og107)"
                 data-testid={`testEdit-${row.id}`}
-                onClick={(): void => handleEdit(row.id as number)}
+                onClick={handleEdit(row.id as number)}
                 variant="outline">
                 <IconPencil color="yellow" size={16} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Delete" withArrow>
+            <Tooltip label="Delete" withArrow={true}>
               <ActionIcon
                 color="var(--color-og107)"
                 data-testid={`testDelete-${row.id}`}
                 ml={10}
-                onClick={async (): Promise<void> => showConfirm(row.id as number)}
+                onClick={showConfirm(row.id as number)}
                 variant="outline">
                 <IconTrash color="yellow" size={16} />
               </ActionIcon>
@@ -518,9 +524,8 @@ const Display = (): JSX.Element => {
         </Table.Tr>
       )
     )
-  }
 
-  const setUserAndRefresh = async (): Promise<void> => {
+  const setUserAndRefresh = (): void => {
     new Promise<void>((resolve): void => {
       setUser(userValue.current ?? undefined)
 
@@ -534,7 +539,7 @@ const Display = (): JSX.Element => {
     })
   }
 
-  const resetUserAndRefresh = async (): Promise<void> => {
+  const resetUserAndRefresh = (): void => {
     new Promise<void>((resolve): void => {
       userValue.current = null
       resetUser()
@@ -544,17 +549,67 @@ const Display = (): JSX.Element => {
       }
 
       resolve()
-    }).then(async (): Promise<void> => {
+    }).then((): void => {
       setFilteredData([])
     })
   }
 
+  const handleNameChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    const u: SafeParseResult<UserSchema> = safeParse(UserSchema, e.target.value)
+    userValue.current = u.success ? u.output : null
+    nameField.setValue(userValue.current ?? "")
+  }
+
+  const handleNameChangeKeyDown = (e: KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key === "Enter") {
+      closeLogin()
+      setUserAndRefresh()
+    }
+  }
+
+  const handleNameConfirm = (): void => {
+    closeLogin()
+    setUserAndRefresh()
+  }
+
+  const handleNameCancel = (): void => {
+    closeLogin()
+    if (userValue.current !== user) {
+      resetUser()
+    }
+  }
+
+  const handleLogout = (): void => {
+    resetUserAndRefresh()
+  }
+
+  const handleLogin = (): void => {
+    userValue.current = user ?? null
+    openLogin()
+    nameField.setValue("")
+    nameField.validate()
+  }
+
+  const handleSearch = (e: ChangeEvent<HTMLInputElement>): void => {
+    const s: SafeParseResult<SearchSchema> = safeParse(SearchSchema, e.currentTarget.value)
+    filterAndSort(s.success ? s.output : undefined)()
+  }
+
+  const handleDateTime = (s: string | null): void => form.setFieldValue("date", dayjs(s).toISOString())
+
+  const handleDescription = (e: ChangeEvent<HTMLTextAreaElement>): void =>
+    e.currentTarget.value.length > 0
+      ? form.setFieldValue("description", e.currentTarget.value)
+      : form.setFieldValue("description", null)
+
+  const handleAdd = (): void => setIsAdding(true)
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: loading from localStorage
   useEffect((): void => {
-    const user: string | null = localStorage.getItem("mind3rUser")
-    if (user) {
-      const u: SafeParseResult<UserSchema> = safeParse(UserSchema, user)
-      const val: string | null = u.success ? u.output : null
+    const userFromStorage: string | null = localStorage.getItem("mind3rUser")
+    if (userFromStorage) {
+      const validatedUser: SafeParseResult<UserSchema> = safeParse(UserSchema, userFromStorage)
+      const val: string | null = validatedUser.success ? validatedUser.output : null
       userValue.current = val
       setUser(val ?? undefined)
       if (DEBUG) {
@@ -565,34 +620,22 @@ const Display = (): JSX.Element => {
 
   return (
     <>
-      <Modal centered onClose={closeLogin} opened={openedLogin} size="auto" withCloseButton={false}>
-        <Tooltip label="Name" withArrow>
+      <Modal centered={true} onClose={closeLogin} opened={openedLogin} size="auto" withCloseButton={false}>
+        <Tooltip label="Name" withArrow={true}>
           <TextInput
             {...nameField.getInputProps()}
             data-testid="testName"
             label="Name"
             maxLength={MAX_LEN_NAME}
-            onChange={(e: ChangeEvent<HTMLInputElement>): void => {
-              const u: SafeParseResult<UserSchema> = safeParse(UserSchema, e.target.value)
-              userValue.current = u.success ? u.output : null
-              nameField.setValue(userValue.current ?? "")
-            }}
-            onKeyDown={async (e: React.KeyboardEvent<HTMLInputElement>): Promise<void> => {
-              if (e.key === "Enter") {
-                closeLogin()
-                await setUserAndRefresh()
-              }
-            }}
+            onChange={handleNameChange}
+            onKeyDown={handleNameChangeKeyDown}
             placeholder="Enter name..."
             rightSection={
               <>
-                <Tooltip label="Confirm" withArrow>
+                <Tooltip label="Confirm" withArrow={true}>
                   <IconCheck
                     color="green"
-                    onClick={async (): Promise<void> => {
-                      closeLogin()
-                      await setUserAndRefresh()
-                    }}
+                    onClick={handleNameConfirm}
                     size={16}
                     style={{
                       cursor: "pointer",
@@ -600,15 +643,10 @@ const Display = (): JSX.Element => {
                     }}
                   />
                 </Tooltip>
-                <Tooltip label="Cancel" withArrow>
+                <Tooltip label="Cancel" withArrow={true}>
                   <IconX
                     color="red"
-                    onClick={(): void => {
-                      closeLogin()
-                      if (userValue.current !== user) {
-                        resetUser()
-                      }
-                    }}
+                    onClick={handleNameCancel}
                     size={16}
                     style={{
                       cursor: "pointer",
@@ -618,7 +656,7 @@ const Display = (): JSX.Element => {
                 </Tooltip>
               </>
             }
-            withAsterisk
+            withAsterisk={true}
           />
         </Tooltip>
       </Modal>
@@ -628,37 +666,28 @@ const Display = (): JSX.Element => {
           position: "fixed",
           top: "10px"
         }}>
-        {!user ? (
-          <Tooltip label="Log In" withArrow>
+        {user ? (
+          <Text c="dimmed" fs="italic" size="xs">
+            Logged in as:{" "}
+            <Tooltip label="Log Out" withArrow={true}>
+              <Anchor c="blue" onClick={handleLogout}>
+                {user}
+              </Anchor>
+            </Tooltip>
+          </Text>
+        ) : (
+          <Tooltip label="Log In" withArrow={true}>
             <Button
               c="var(--mantine-color-dark-0)"
               color="var(--color-og107)"
               data-testid="testLogin"
               leftSection={<IconKey color="yellow" size={16} />}
-              onClick={(): void => {
-                userValue.current = user ?? null
-                openLogin()
-                nameField.setValue("")
-                nameField.validate()
-              }}
+              onClick={handleLogin}
               size="xs"
               variant="outline">
               Log In
             </Button>
           </Tooltip>
-        ) : (
-          <Text c="dimmed" fs="italic" size="xs">
-            Logged in as:{" "}
-            <Tooltip label="Log Out" withArrow>
-              <Anchor
-                c="blue"
-                onClick={async (): Promise<void> => {
-                  await resetUserAndRefresh()
-                }}>
-                {user}
-              </Anchor>
-            </Tooltip>
-          </Text>
         )}
       </Group>
       <Box
@@ -672,19 +701,16 @@ const Display = (): JSX.Element => {
           <Center>
             <TextInput
               data-testid="testSearch"
-              disabled={!data.length}
+              disabled={data.length === 0}
               leftSection={<IconSearch color="white" size={16} />}
               maxLength={MAX_LEN_SEARCH}
-              onChange={(e: ChangeEvent<HTMLInputElement>): void => {
-                const s: SafeParseResult<SearchSchema> = safeParse(SearchSchema, e.currentTarget.value)
-                filterAndSort(s.success ? s.output : undefined)
-              }}
+              onChange={handleSearch}
               placeholder="Search by Event or Description..."
               rightSection={
-                <Tooltip label="Clear" withArrow>
+                <Tooltip label="Clear" withArrow={true}>
                   <IconX
                     color="red"
-                    onClick={(): void => filterAndSort()}
+                    onClick={filterAndSort(undefined)}
                     size={16}
                     style={{
                       cursor: "pointer"
@@ -696,23 +722,19 @@ const Display = (): JSX.Element => {
               w={600}
             />
           </Center>
-          <Table data-testid="testTable" highlightOnHover mt={20}>
+          <Table data-testid="testTable" highlightOnHover={true} mt={20}>
             <Table.Tbody>
               <Table.Tr>
                 <Th
                   label="Date/Time"
-                  onSort={(): void =>
-                    handleSort(SortBy.DATE, sortOrder === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC)
-                  }
+                  onSort={handleSort(SortBy.DATE, sortOrder === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC)}
                   reversed={sortOrder === SortOrder.ASC}
                   sorted={sortBy === SortBy.DATE}>
                   📅 Date/Time
                 </Th>
                 <Th
                   label="Event"
-                  onSort={(): void =>
-                    handleSort(SortBy.EVENT, sortOrder === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC)
-                  }
+                  onSort={handleSort(SortBy.EVENT, sortOrder === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC)}
                   reversed={sortOrder === SortOrder.ASC}
                   sorted={sortBy === SortBy.EVENT}>
                   📌 Event
@@ -734,7 +756,7 @@ const Display = (): JSX.Element => {
               </Table.Tr>
             </Table.Tbody>
             <Table.Tbody>
-              {filteredData?.length ? (
+              {filteredData.length > 0 ? (
                 getRows()
               ) : (
                 <Table.Tr>
@@ -752,7 +774,7 @@ const Display = (): JSX.Element => {
                       ta="center">
                       No reminders to display
                     </Text>
-                    {!user ? (
+                    {user ? null : (
                       <Text
                         c="var(--color-og107)"
                         fw="bold"
@@ -765,7 +787,7 @@ const Display = (): JSX.Element => {
                         ta="center">
                         ⚠️ Please log in ⚠️
                       </Text>
-                    ) : null}
+                    )}
                   </Table.Td>
                 </Table.Tr>
               )}
@@ -774,7 +796,7 @@ const Display = (): JSX.Element => {
           <Box mt={20} ta="center">
             {isAdding ? (
               <>
-                <Tooltip label="Cancel" withArrow>
+                <Tooltip label="Cancel" withArrow={true}>
                   <Button
                     c="var(--mantine-color-dark-0)"
                     color="var(--color-og107)"
@@ -799,9 +821,10 @@ const Display = (): JSX.Element => {
                       <DateTimePicker
                         {...form.getInputProps("date")}
                         error={dayjs(form.values.date) < dayjs(getDateTime())}
+                        highlightToday={true}
                         label="Date/Time"
                         minDate={getDateTime()}
-                        onChange={(s: string | null): void => form.setFieldValue("date", dayjs(s).toISOString())}
+                        onChange={handleDateTime}
                         timePickerProps={{
                           format: "12h",
                           minutesStep: 5,
@@ -813,7 +836,7 @@ const Display = (): JSX.Element => {
                         value={dayjs(form.values.date).local().format()}
                         valueFormat={DATETIME_FORMAT}
                         w={300}
-                        withAsterisk
+                        withAsterisk={true}
                         withSeconds={false}
                       />
                       <TextInput
@@ -825,7 +848,7 @@ const Display = (): JSX.Element => {
                         placeholder="Enter event..."
                         value={form.values.event}
                         w={300}
-                        withAsterisk
+                        withAsterisk={true}
                       />
                       <Textarea
                         {...form.getInputProps("description")}
@@ -835,16 +858,12 @@ const Display = (): JSX.Element => {
                         maxRows={2}
                         minRows={1}
                         ml={20}
-                        onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
-                          !e.currentTarget.value.length
-                            ? form.setFieldValue("description", null)
-                            : form.setFieldValue("description", e.currentTarget.value)
-                        }
+                        onChange={handleDescription}
                         placeholder="Enter description..."
                         value={form.values.description ?? ""}
                         w={300}
                       />
-                      <Tooltip label="Submit" withArrow>
+                      <Tooltip label="Submit" withArrow={true}>
                         <Button
                           c="var(--mantine-color-dark-0)"
                           color="var(--color-og107)"
@@ -862,14 +881,14 @@ const Display = (): JSX.Element => {
                 </Box>
               </>
             ) : (
-              <Tooltip label="Add Event" withArrow>
+              <Tooltip label="Add Event" withArrow={true}>
                 <Button
                   c="var(--mantine-color-dark-0)"
                   color="var(--color-og107)"
                   data-testid="testAdd"
                   disabled={!user}
                   leftSection={<IconPlus color="green" />}
-                  onClick={(): void => setIsAdding(true)}
+                  onClick={handleAdd}
                   variant="outline">
                   Add Event
                 </Button>

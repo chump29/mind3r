@@ -11,9 +11,7 @@ import { MAX_LEN_DESCRIPTION, MAX_LEN_EVENT } from "../src/components/shared/sch
  * @summary Truncated to {@link MAX_LEN_EVENT}
  * @returns {string} Event title
  */
-const generateEvent = (): string => {
-  return truncate(fake.company.buzzPhrase(), MAX_LEN_EVENT)
-}
+const generateEvent = (): string => truncate(fake.company.buzzPhrase(), MAX_LEN_EVENT)
 
 /**
  * Generate fake event description
@@ -21,30 +19,25 @@ const generateEvent = (): string => {
  * @summary Truncated to {@link MAX_LEN_DESCRIPTION}
  * @returns {string} Event description
  */
-const generateDescription = (): string => {
-  return truncate(fake.lorem.sentence(), MAX_LEN_DESCRIPTION)
-}
+const generateDescription = (): string => truncate(fake.lorem.sentence(), MAX_LEN_DESCRIPTION)
 
 /**
  * Generate fake user name
  * @function
  * @returns {string} User name
  */
-const generateUser = (): string => {
-  return fake.person.firstName("generic")
-}
+const generateUser = (): string => fake.person.firstName("generic")
 
 let MAX_ID: number = 1
 
-const reminderData = (): IReminder => {
-  return {
+const reminderData = (): IReminder =>
+  ({
     date: fake.date.future().toISOString(),
     description: truncate(fake.lorem.sentence(), MAX_LEN_DESCRIPTION),
     event: truncate(fake.company.buzzPhrase(), MAX_LEN_EVENT),
     id: MAX_ID++,
     user: generateUser()
-  } satisfies IReminder
-}
+  }) satisfies IReminder
 
 /**
  * Generate fake Reminder data
@@ -52,9 +45,7 @@ const reminderData = (): IReminder => {
  * @function
  * @returns {IReminder} Reminder data
  */
-const generateReminder = (): IReminder => {
-  return validate(reminderData())
-}
+const generateReminder = (): IReminder => validate(reminderData())
 
 const DEFAULT_NUM_REMINDERS: number = 3
 

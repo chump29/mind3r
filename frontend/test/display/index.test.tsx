@@ -63,8 +63,8 @@ beforeAll((): void => {
 })
 
 beforeEach(async (): Promise<void> => {
-  await waitFor(async (): Promise<void> => {
-    await act(async (): Promise<void> => {
+  await waitFor((): void => {
+    act((): void => {
       render(
         <MantineProvider>
           <ModalsProvider>
@@ -170,9 +170,9 @@ describe("index", (): void => {
       console.info("💥 Edited event")
     })
 
-    const reminder: IReminder = data.find((reminder: IReminder): boolean => reminder.id === 1) as IReminder
-    console.info(`⚠️  Old: ${titleCase(reminder.event)}, New: ${titleCase(newEvent)}`)
-    reminder.event = newEvent
+    const r: IReminder = data.find((reminder: IReminder): boolean => reminder.id === 1) as IReminder
+    console.info(`⚠️  Old: ${titleCase(r.event)}, New: ${titleCase(newEvent)}`)
+    r.event = newEvent
 
     await waitFor(async (): Promise<void> => {
       console.info("💥 Submit button clicked")

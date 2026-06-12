@@ -11,9 +11,7 @@ import { type IReminder, ReminderSchema } from "./IReminder.ts"
  * @returns {Promise<HTMLElement>} DOM element
  * @throws {Error} If element not found
  */
-const findElement = (element: string): HTMLElement | null => {
-  return document.querySelector(element)
-}
+const findElement = (element: string): HTMLElement | null => document.querySelector(element)
 
 /**
  * Format version string
@@ -21,9 +19,7 @@ const findElement = (element: string): HTMLElement | null => {
  * @param {string | undefined} version - version string
  * @returns {Promise<string>} v[version], or N/A if undefined
  */
-const getVersion = (version: string | undefined): string => {
-  return version ? `v${version}` : "N/A"
-}
+const getVersion = (version: string | undefined): string => (version ? `v${version}` : "N/A")
 
 /**
  * Validate {@link IReminder} object or array

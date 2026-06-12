@@ -32,18 +32,17 @@ describe("index", (): void => {
   // * NOTE: remapping because of case transformation on event title
   const remap = <T>(obj: T): T => {
     if (Array.isArray(obj)) {
-      return obj.map((reminder: IReminder): IReminder => {
-        return {
+      return obj.map(
+        (reminder: IReminder): IReminder => ({
           ...reminder,
           event: titleCase(reminder.event)
-        }
-      }) as T
-    } else {
-      return {
-        ...obj,
-        event: titleCase((obj as IReminder).event)
-      } as T
+        })
+      ) as T
     }
+    return {
+      ...obj,
+      event: titleCase((obj as IReminder).event)
+    } as T
   }
 
   test("validate", (): void => {
@@ -95,7 +94,7 @@ describe("index", (): void => {
   test("handleError - error", (): void => {
     const errorSpy: jest.Mock = spyOn(console, "error")
 
-    handleError(new Error())
+    handleError(new Error("test"))
 
     expect(errorSpy).toHaveBeenCalled()
   })

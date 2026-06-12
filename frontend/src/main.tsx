@@ -12,26 +12,26 @@ import { default as Display } from "./components/display/index.tsx"
 import { findElement, getVersion } from "./components/shared/index.ts"
 import { BooleanSchema, TimeoutSchema, UrlSchema, VersionSchema } from "./components/shared/schemas.ts"
 
-const d: SafeParseResult<BooleanSchema> = safeParse(BooleanSchema, import.meta.env.VITE_DEBUG)
-const DEBUG: boolean = d.success ? d.output : false
+const debug: SafeParseResult<BooleanSchema> = safeParse(BooleanSchema, import.meta.env.VITE_DEBUG)
+const DEBUG: boolean = debug.success ? debug.output : false
 
-let version: string = ""
-const v: SafeParseResult<VersionSchema> = safeParse(VersionSchema, import.meta.env.PACKAGE_VERSION)
-if (v.success) {
-  version = v.output
+let uiVersion: string = ""
+const validatedUiVersion: SafeParseResult<VersionSchema> = safeParse(VersionSchema, import.meta.env.PACKAGE_VERSION)
+if (validatedUiVersion.success) {
+  uiVersion = validatedUiVersion.output
 } else {
-  error("Could not parse UI version", summarize(v.issues))
+  error("Could not parse UI version", summarize(validatedUiVersion.issues))
 }
 
-version = getVersion(version)
+uiVersion = getVersion(uiVersion)
 
 if (DEBUG) {
-  info(`Got UI version: ${version}`)
+  info(`Got UI version: ${uiVersion}`)
 }
 
 const frontend: HTMLElement | null = findElement("#frontend")
 if (frontend) {
-  frontend.textContent = version
+  frontend.textContent = uiVersion
 } else {
   error("Could not find frontend version element")
 }
@@ -41,11 +41,11 @@ if (!backend) {
   error("Could not find backend version element")
 }
 
-const u: SafeParseResult<UrlSchema> = safeParse(UrlSchema, import.meta.env.VITE_API_URL)
-const API_URL: string = `${u.success ? u.output : ""}/api`
+const api_url: SafeParseResult<UrlSchema> = safeParse(UrlSchema, import.meta.env.VITE_API_URL)
+const API_URL: string = `${api_url.success ? api_url.output : ""}/api`
 
-const t: SafeParseResult<TimeoutSchema> = safeParse(TimeoutSchema, import.meta.env.VITE_API_TIMEOUT)
-const API_TIMEOUT: number = t.success ? t.output : ms("1s")
+const api_timeout: SafeParseResult<TimeoutSchema> = safeParse(TimeoutSchema, import.meta.env.VITE_API_TIMEOUT)
+const API_TIMEOUT: number = api_timeout.success ? api_timeout.output : ms("1s")
 
 // * NOTE: not using await, don't hold up page render
 fetch(`${API_URL}/version`, {
@@ -58,23 +58,23 @@ fetch(`${API_URL}/version`, {
 
     return await response.text()
   })
-  .then(async (rawVersion: string): Promise<void> => {
-    let version: string = ""
-    const v: SafeParseResult<VersionSchema> = safeParse(VersionSchema, rawVersion)
-    if (v.success) {
-      version = v.output
+  .then((rawVersion: string): void => {
+    let apiVersion: string = ""
+    const validatedApiVersion: SafeParseResult<VersionSchema> = safeParse(VersionSchema, rawVersion)
+    if (validatedApiVersion.success) {
+      apiVersion = validatedApiVersion.output
     } else {
       throw new Error("Could not parse API version")
     }
 
-    version = getVersion(version)
+    apiVersion = getVersion(apiVersion)
 
     if (DEBUG) {
-      info(`Got API version: ${version}`)
+      info(`Got API version: ${apiVersion}`)
     }
 
     if (backend) {
-      backend.textContent = version
+      backend.textContent = apiVersion
     }
   })
   .catch((e: unknown): void => {
