@@ -67,6 +67,12 @@ const MAX_LEN_EVENT: number = 50
  */
 const DATETIME_FORMAT: string = "dddd, MMMM Do @ h:mm A"
 
+/**
+ * Round to nearest minutes
+ * @constant
+ * @type {number}
+ * @default 5
+ */
 const ROUND_TO_NEAREST_MINUTES: number = 5
 
 /**
@@ -76,13 +82,16 @@ const ROUND_TO_NEAREST_MINUTES: number = 5
  * @summary Rounds up to nearest {@link ROUND_TO_NEAREST_MINUTES} minutes
  */
 const getDateTime = (): string => {
-  let round: number = ms(`${ROUND_TO_NEAREST_MINUTES}m`)
+  let date: dayjs.Dayjs = dayjs()
 
-  if (new Date().getMinutes() % ROUND_TO_NEAREST_MINUTES === 0) {
-    round += ms(`${ROUND_TO_NEAREST_MINUTES}m`)
+  const nextMinutes: number = Math.ceil(date.minute() / ROUND_TO_NEAREST_MINUTES) * ROUND_TO_NEAREST_MINUTES
+  date = nextMinutes === 60 ? date.add(1, "hours").startOf("hours") : date.minute(nextMinutes).startOf("minutes")
+
+  if (dayjs().minute() === date.minute()) {
+    date = date.add(ROUND_TO_NEAREST_MINUTES, "minutes")
   }
 
-  return dayjs(Math.ceil(dayjs().valueOf() / round) * round).toISOString()
+  return date.toISOString()
 }
 
 /**
@@ -93,8 +102,7 @@ const getDateTime = (): string => {
 const DateTimeSchema = pipe(
   string(),
   nonEmpty(),
-  transform((s: string): string => dayjs(s).utc().toISOString()),
-  minValue(getDateTime())
+  transform((s: string): string => dayjs(s).utc().toISOString())
 )
 
 type DateTimeSchema = typeof DateTimeSchema
@@ -238,6 +246,7 @@ export {
   MAX_LEN_EVENT,
   MAX_LEN_NAME,
   MAX_LEN_SEARCH,
+  ROUND_TO_NEAREST_MINUTES, // for testing
   SearchSchema,
   TimeoutSchema,
   UrlSchema,

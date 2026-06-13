@@ -215,7 +215,7 @@ const Display = (): JSX.Element => {
     onSuccess: (d: IReminder[]): void => {
       setFilteredData(d)
 
-      handleSort(SortBy.DATE, SortOrder.ASC)
+      handleSort(SortBy.DATE, SortOrder.ASC)()
     }
   })
 
@@ -301,7 +301,7 @@ const Display = (): JSX.Element => {
 
       filterData()
 
-      handleSort(sortBy, sortOrder)
+      handleSort(sortBy, sortOrder)()
     }
 
   const handleCancel = (): void => {

@@ -1,7 +1,10 @@
-import { describe, expect, test } from "bun:test"
+import { info } from "node:console"
+
+import { describe, expect, setSystemTime, test } from "bun:test"
 
 import { fakerEN_US as fake } from "@faker-js/faker"
 import { default as dayjs } from "dayjs"
+import { default as ms } from "ms"
 import { type SafeParseResult, safeParse } from "valibot"
 
 import {
@@ -9,10 +12,12 @@ import {
   DateTimeSchema,
   DescriptionSchema,
   EventSchema,
+  getDateTime,
   IdSchema,
   MAX_LEN_DESCRIPTION,
   MAX_LEN_EVENT,
   MAX_LEN_SEARCH,
+  ROUND_TO_NEAREST_MINUTES,
   SearchSchema,
   TimeoutSchema,
   UrlSchema,
@@ -38,11 +43,89 @@ describe("schema", (): void => {
   })
 
   test("DateTimeSchema - fail", (): void => {
-    const date: string = dayjs().toISOString()
-    const d: SafeParseResult<DateTimeSchema> = safeParse(DateTimeSchema, date)
+    const d: SafeParseResult<DateTimeSchema> = safeParse(DateTimeSchema, "")
 
     expect(d.success).toBeFalse()
-    expect(d.issues?.[0].message).toStartWith("Invalid value")
+    expect(d.issues?.[0].message).toContain("!0")
+  })
+
+  test(
+    "getDateTime",
+    (): void => {
+      let notMultiple: number
+      do {
+        notMultiple = fake.number.int({
+          max: 54,
+          min: 1
+        })
+      } while (notMultiple % ROUND_TO_NEAREST_MINUTES === 0)
+      const date: dayjs.Dayjs = dayjs().minute(notMultiple).startOf("minutes")
+      setSystemTime(date.toDate())
+
+      info("From:", date.toISOString())
+
+      let nextMinutes: number = Math.ceil(date.minute() / ROUND_TO_NEAREST_MINUTES) * ROUND_TO_NEAREST_MINUTES
+      if (nextMinutes === 60) {
+        nextMinutes = 0
+      }
+
+      const newDate: string = getDateTime()
+
+      info("To:", newDate)
+
+      expect(dayjs(newDate).minute()).toBe(nextMinutes)
+
+      setSystemTime()
+    },
+    {
+      repeats: 4
+    }
+  )
+
+  test(
+    "getDateTime - next",
+    (): void => {
+      const date: dayjs.Dayjs = dayjs()
+        .minute(
+          fake.number.int({
+            max: Math.floor(60 / ROUND_TO_NEAREST_MINUTES) * ROUND_TO_NEAREST_MINUTES - ROUND_TO_NEAREST_MINUTES * 2,
+            min: 0,
+            multipleOf: ROUND_TO_NEAREST_MINUTES
+          })
+        )
+        .startOf("minutes")
+      setSystemTime(date.toDate())
+
+      info("From:", date.toISOString())
+
+      const newDate: string = getDateTime()
+
+      info("To:", newDate)
+
+      expect(dayjs(newDate).diff(date)).toBe(ms(`${ROUND_TO_NEAREST_MINUTES}m`))
+
+      setSystemTime()
+    },
+    {
+      repeats: 4
+    }
+  )
+
+  test("getDateTime - roll", (): void => {
+    const MAX_MINUTES: number = 55
+
+    const date: dayjs.Dayjs = dayjs().minute(MAX_MINUTES).startOf("minutes")
+    setSystemTime(date.toDate())
+
+    info("From:", date.toISOString())
+
+    const newDate: string = getDateTime()
+
+    info("To:", newDate)
+
+    expect(dayjs(newDate).diff(date)).toBe(ms(`${ROUND_TO_NEAREST_MINUTES}m`))
+
+    setSystemTime()
   })
 
   test("EventSchema", (): void => {
