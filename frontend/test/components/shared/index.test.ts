@@ -4,9 +4,9 @@ import { fakerEN_US as fake } from "@faker-js/faker"
 import { status } from "http-status"
 import { titleCase } from "title-case"
 
-import { type IReminder } from "../../src/components/shared/IReminder.ts"
-import { FetchError, findElement, getVersion, handleError, validate } from "../../src/components/shared/index.ts"
-import { generateReminder, generateReminders } from "../helpers.ts"
+import { type IReminder } from "../../../src/components/shared/IReminder.ts"
+import { FetchError, findElement, getVersion, handleError, validate } from "../../../src/components/shared/index.ts"
+import { generateReminder, generateReminders } from "../../helpers.ts"
 
 describe("index", (): void => {
   test("findElement", (): void => {

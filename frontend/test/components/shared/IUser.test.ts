@@ -2,8 +2,8 @@ import { describe, expect, test } from "bun:test"
 
 import { type SafeParseResult, safeParse } from "valibot"
 
-import { type IUser, vUserSchema } from "../../src/components/shared/IUser.ts"
-import { generateUser } from "../helpers.ts"
+import { type IUser, vUserSchema } from "../../../src/components/shared/IUser.ts"
+import { generateUser } from "../../helpers.ts"
 
 const user: IUser = {
   user: generateUser()

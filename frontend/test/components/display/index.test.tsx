@@ -10,10 +10,10 @@ import { default as httpMethods } from "http-methods-constants"
 import { default as ms } from "ms"
 import { titleCase } from "title-case"
 
-import { default as Display } from "../../src/components/display/index.tsx"
-import { type IReminder } from "../../src/components/shared/IReminder.ts"
-import { displayStore } from "../../src/components/shared/store.ts"
-import { generateEvent, generateReminder, generateReminders, generateUser } from "../helpers.ts"
+import Display from "../../../src/components/display/index.tsx"
+import { type IReminder } from "../../../src/components/shared/IReminder.ts"
+import { displayStore } from "../../../src/components/shared/store.ts"
+import { generateEvent, generateReminder, generateReminders, generateUser } from "../../helpers.ts"
 
 configure({
   asyncUtilTimeout: ms("3s")
