@@ -9,14 +9,6 @@
 
 ---
 
-<!-- ! TODO
-### 📷 Screenshot
-
-![Screenshot](./images/screenshot.png)
-
----
--->
-
 ### 🐳 Docker
 
 #### Compose Flow:
