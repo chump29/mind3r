@@ -46,6 +46,10 @@ for _env in frontend backend; do
     export _tailwind
     echo -e " • tailwindcss: $_tailwind"
 
+    _typescript=$(jq -r '.overrides.typescript // "❓"' package.json)
+    export _typescript
+    echo -e " • typescript: $_typescript"
+
     _vite=$(jq -r '.devDependencies.vite // "❓"' package.json)
     export _vite
     echo -e " • vite: $_vite"

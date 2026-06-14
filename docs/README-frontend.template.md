@@ -10,6 +10,7 @@
 ![Mantine](https://img.shields.io/badge/Mantine-$_mantine-informational?style=plastic&logo=mantine "Mantine") &nbsp;
 ![React](https://img.shields.io/badge/React-$_react-informational?style=plastic&logo=react "React") &nbsp;
 ![Tailwind](https://img.shields.io/badge/Tailwind-$_tailwind-informational?style=plastic&logo=tailwindcss "Tailwind") &nbsp;
+![TypeScript](https://img.shields.io/badge/TypeScript-$_typescript-informational?style=plastic&logo=typescript "TypeScript") &nbsp; <!-- markdownlint-disable-line MD013 -->
 ![Vite](https://img.shields.io/badge/Vite-$_vite-informational?style=plastic&logo=vite "Vite")
 
 ![Coverage](https://img.shields.io/badge/Coverage-$_coverage%25-success?style=plastic&logo=v8 "Coverage")

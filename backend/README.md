@@ -7,7 +7,7 @@
 ![Backend](https://img.shields.io/badge/Backend-1.0.0-chocolate?style=plastic&logo=docker "Backend")
 
 ![Behave](https://img.shields.io/badge/Behave->=1.3.3-informational?style=plastic "Behave") &nbsp;
-![FastAPI](https://img.shields.io/badge/FastAPI->=0.136.3-informational?style=plastic&logo=fastapi "FastAPI") &nbsp;
+![FastAPI](https://img.shields.io/badge/FastAPI->=0.137.0-informational?style=plastic&logo=fastapi "FastAPI") &nbsp;
 ![Peewee](https://img.shields.io/badge/Peewee->=4.0.8-informational?style=plastic "Peewee") &nbsp; <!-- markdownlint-disable-line MD013 -->
 ![Pydantic](https://img.shields.io/badge/Pydantic->=2.13.4-informational?style=plastic&logo=pydantic "Pydantic") &nbsp;
 ![SQLite](https://img.shields.io/badge/SQLite-3.51.2-informational?style=plastic&logo=sqlite "SQLite") &nbsp;
