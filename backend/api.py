@@ -16,7 +16,7 @@ from cachetools import LRUCache, _CacheInfo, cached
 from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI
 from nh3 import clean  # pylint: disable=no-name-in-module
-from peewee import AutoField, CharField, DateTimeField, Model, SqliteDatabase
+from peewee import AutoField, CharField, DateTimeField, Model, SqliteDatabase, TextField
 from playhouse.shortcuts import model_to_dict
 from pluralizer import Pluralizer
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt, StrictStr
@@ -59,9 +59,9 @@ def shutdown(sig: int, _: FrameType | None = None) -> None:
 signal(SIGINT, shutdown)
 signal(SIGTERM, shutdown)
 
-MAX_LEN: Final[int] = 255
 MAX_LEN_EVENT: Final[int] = 50
 MAX_LEN_USER: Final[int] = 64
+MAX_LEN_USER_TEXT: Final[int] = 255
 
 pluralizer: Final[Pluralizer] = Pluralizer()
 
@@ -69,7 +69,7 @@ pluralizer: Final[Pluralizer] = Pluralizer()
 class UserDTO(BaseModel):
     """User domain model"""
 
-    user: StrictStr = Field(max_length=MAX_LEN)
+    user: StrictStr = Field(max_length=MAX_LEN_USER_TEXT)
 
     model_config = ConfigDict(extra="forbid")
 
@@ -84,7 +84,7 @@ class Reminder(Model):
     id: AutoField = AutoField()
     date: DateTimeField = DateTimeField()
     event: CharField = CharField(max_length=MAX_LEN_EVENT)
-    description: CharField = CharField(max_length=MAX_LEN, null=True)
+    description: TextField = TextField(null=True)
     user: CharField = CharField(max_length=MAX_LEN_USER)
 
     @dataclass
@@ -105,8 +105,8 @@ class ReminderDTO(BaseModel):
     id: PositiveInt | None = Field(strict=True, default=None)
     date: datetime
     event: StrictStr = Field(max_length=MAX_LEN_EVENT)
-    description: StrictStr | None = Field(max_length=MAX_LEN, default=None)
-    user: StrictStr | None = Field(max_length=MAX_LEN, default=None)
+    description: StrictStr | None = Field(default=None)
+    user: StrictStr | None = Field(max_length=MAX_LEN_USER, default=None)
 
     model_config = ConfigDict(extra="forbid")
 

@@ -14,7 +14,6 @@ import {
   EventSchema,
   getDateTime,
   IdSchema,
-  MAX_LEN_DESCRIPTION,
   MAX_LEN_EVENT,
   MAX_LEN_SEARCH,
   ROUND_TO_NEAREST_MINUTES,
@@ -145,11 +144,10 @@ describe("schema", (): void => {
   })
 
   test("DescriptionSchema - fail", (): void => {
-    const description: string = fake.string.alphanumeric(MAX_LEN_DESCRIPTION + 1)
-    const d: SafeParseResult<DescriptionSchema> = safeParse(DescriptionSchema, description)
+    const d: SafeParseResult<DescriptionSchema> = safeParse(DescriptionSchema, "")
 
     expect(d.success).toBeFalse()
-    expect(d.issues?.[0].message).toInclude(`<=${MAX_LEN_DESCRIPTION} but received ${MAX_LEN_DESCRIPTION + 1}`)
+    expect(d.issues?.[0].message).toInclude("!0")
   })
 
   test("IdSchema", (): void => {

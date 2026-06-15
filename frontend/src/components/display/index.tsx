@@ -40,6 +40,7 @@ import { default as dayjs } from "dayjs"
 import { default as advancedFormat } from "dayjs/plugin/advancedFormat"
 import { filterData as filter, SearchType } from "filter-data"
 import { default as httpMethods } from "http-methods-constants"
+import { default as linkify, type Match } from "linkify-it"
 import { default as ms } from "ms"
 import { default as useSWR } from "swr/immutable"
 import { type SafeParseResult, safeParse } from "valibot"
@@ -485,6 +486,53 @@ const Display = (): JSX.Element => {
     }
   }
 
+  const formatDescription = (description: string | null): (string | JSX.Element)[] | null => {
+    if (!description) {
+      return null
+    }
+
+    let desc: string = description
+
+    const content: (string | JSX.Element)[] = []
+
+    const matches: Match[] | null = new linkify().match(desc)
+
+    if (matches) {
+      for (const match of matches) {
+        // biome-ignore-start lint/nursery/noBaseToString: keeping Anchor elements as-is
+        const len: number = content.join("").length
+        // biome-ignore-end lint/nursery/noBaseToString: keeping Anchor elements as-is
+        const start: number = match.index - len
+        const end: number = match.lastIndex - len
+
+        content.push(desc.slice(0, start))
+        content.push(desc.slice(start, end))
+
+        desc = desc.slice(end)
+      }
+
+      for (const [i, str] of content.entries()) {
+        const match: Match | undefined = matches.find((m: Match) => m.raw === str)
+        if (match) {
+          let title: string = "Click to "
+          if (match.text.includes("@")) {
+            title += "email"
+          } else {
+            title += "open"
+          }
+
+          content[i] = (
+            <Anchor fz="sm" href={match.url} target="_blank" title={title}>
+              {match.text}
+            </Anchor>
+          )
+        }
+      }
+    }
+
+    return content
+  }
+
   const getRows = (): JSX.Element[] =>
     filteredData.map(
       (row: IReminder): JSX.Element => (
@@ -495,10 +543,12 @@ const Display = (): JSX.Element => {
           <Table.Td w={400}>{row.event}</Table.Td>
           <Table.Td
             style={{
-              wordBreak: "break-word"
+              whiteSpace: "pre-line"
             }}
             w={450}>
-            {row.description}
+            {formatDescription(row.description)?.map((description: string | JSX.Element, i: number) => (
+              <span key={`desc-${i.toString()}`}>{description}</span>
+            ))}
           </Table.Td>
           <Table.Td ta="center" w={100}>
             <Tooltip label="Edit" withArrow={true}>

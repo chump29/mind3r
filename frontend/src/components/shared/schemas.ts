@@ -47,9 +47,9 @@ type VersionSchema = typeof VersionSchema
  * Maximum description length
  * @constant
  * @type {number}
- * @default 255
+ * @default 1000
  */
-const MAX_LEN_DESCRIPTION: number = 255
+const MAX_LEN_DESCRIPTION: number = 1000
 
 /**
  * Maximum event title length
@@ -125,7 +125,7 @@ type EventSchema = typeof EventSchema
 /**
  * Validate description
  * @function
- * @summary null | non-empty string, max length = {@link MAX_LEN_DESCRIPTION}
+ * @summary null | non-empty string
  * @default null
  */
 const DescriptionSchema = nullable(
@@ -133,7 +133,6 @@ const DescriptionSchema = nullable(
     string(),
     trim(),
     nonEmpty(),
-    maxLength(MAX_LEN_DESCRIPTION),
     transform((s: string): string | null => (s.length > 0 ? s : null))
   )
 )

@@ -13,7 +13,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-^6.0.3-informational?style=plastic&logo=typescript "TypeScript") &nbsp; <!-- markdownlint-disable-line MD013 -->
 ![Vite](https://img.shields.io/badge/Vite-^8.0.16-informational?style=plastic&logo=vite "Vite")
 
-![Coverage](https://img.shields.io/badge/Coverage-92.87%25-success?style=plastic&logo=v8 "Coverage")
+![Coverage](https://img.shields.io/badge/Coverage-92.92%25-success?style=plastic&logo=v8 "Coverage")
 
 ---
 
