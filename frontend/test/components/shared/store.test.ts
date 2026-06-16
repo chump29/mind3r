@@ -2,8 +2,6 @@ import { describe, expect, test } from "bun:test"
 
 import { fakerEN_US as fake } from "@faker-js/faker"
 
-import { type IReminder } from "../../../src/components/shared/IReminder.ts"
-import { SortBy, SortOrder } from "../../../src/components/shared/index.ts"
 import {
   displayStore,
   setEditing,
@@ -12,8 +10,10 @@ import {
   setSearch,
   setSortBy,
   setSortOrder
-} from "../../../src/components/shared/store.ts"
-import { generateReminders } from "../../helpers.ts"
+} from "../../../src/components/shared/displayStore.ts"
+import { type IReminder } from "../../../src/components/shared/IReminder.ts"
+import { SortBy, SortOrder } from "../../../src/components/shared/index.ts"
+import { generateReminders } from "../../fakes.ts"
 
 describe("store", (): void => {
   const reminders: IReminder[] = generateReminders()

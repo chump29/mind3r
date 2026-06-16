@@ -9,12 +9,14 @@ from os import getenv, getpid, kill
 from pathlib import Path
 from signal import SIGINT, SIGKILL, SIGTERM, Signals, signal
 from tomllib import load
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Annotated, Final
 
 from box import Box
 from cachetools import LRUCache, _CacheInfo, cached
 from dotenv import load_dotenv
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jwt import decode
 from nh3 import clean  # pylint: disable=no-name-in-module
 from peewee import AutoField, CharField, DateTimeField, Model, SqliteDatabase, TextField
 from playhouse.shortcuts import model_to_dict
@@ -66,18 +68,6 @@ MAX_LEN_USER_TEXT: Final[int] = 255
 pluralizer: Final[Pluralizer] = Pluralizer()
 
 
-class UserDTO(BaseModel):
-    """User domain model"""
-
-    user: StrictStr = Field(max_length=MAX_LEN_USER_TEXT)
-
-    model_config = ConfigDict(extra="forbid")
-
-    def __hash__(self: UserDTO) -> int:
-        """Make hashable for caching"""
-        return hash(self.user)
-
-
 class Reminder(Model):
     """Reminder database model"""
 
@@ -106,16 +96,13 @@ class ReminderDTO(BaseModel):
     date: datetime
     event: StrictStr = Field(max_length=MAX_LEN_EVENT)
     description: StrictStr | None = Field(default=None)
-    user: StrictStr | None = Field(max_length=MAX_LEN_USER, default=None)
+    user: StrictStr | None = Field(default=None)
 
     model_config = ConfigDict(extra="forbid")
 
     def __str__(self: ReminderDTO) -> str:
         """Show ReminderDTO data"""
-        return (
-            f"id={self.id}, date={self.date}, event={self.event}, "
-            f"description={self.description}, user={shorten(str(self.user))}"
-        )
+        return f"id={self.id}, date={self.date}, event={self.event}, description={self.description}"
 
     def sanitize(self: ReminderDTO) -> ReminderDTO:
         """Sanitize ReminderDTO"""
@@ -220,19 +207,44 @@ def get_version() -> str | None:
         return None
 
 
+def invalid_token() -> None:
+    """Invalid token"""
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token", headers={"WWW-Authenticate": "Bearer"}
+    )
+
+
+def verify_token(credentials: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer())]) -> str | None:
+    """Verify JWT"""
+    user: str | None = None
+    try:
+        payload = decode(
+            credentials.credentials,
+            getenv("TOKEN") or "",
+            options={"require": ["exp", "iat", "sub"]},
+            algorithms=["HS256"],
+        )
+        user = payload.get("sub")
+    except Exception:  # pylint: disable=broad-exception-caught
+        if DEBUG:
+            CONSOLE.print_exception()
+        invalid_token()
+    return user
+
+
 def get_user_hash(user: str) -> str:
     """Get user hash"""
     return sha256(user.encode()).hexdigest()
 
 
-@ROUTER.post("/get", response_model=list[ReminderDTO] | None)
+@ROUTER.get("/get", response_model=list[ReminderDTO] | None)
 @cached(cache=LRUCache(maxsize=10), info=True)
-def get_all_reminders(user: UserDTO) -> list[ReminderDTO] | None:
+def get_all_reminders(user: Annotated[str, Depends(verify_token)]) -> list[ReminderDTO] | None:
     """Get all reminders"""
-    if not user or not user.user:
+    if not user:
         return None
     try:
-        user_hash: Final[str] = get_user_hash(user.user)
+        user_hash: Final[str] = get_user_hash(user)
         delete_expired(user_hash)
         count: Final[int] = Reminder.select().where(Reminder.user == user_hash).count(None)
         if count == 0:
@@ -248,7 +260,6 @@ def get_all_reminders(user: UserDTO) -> list[ReminderDTO] | None:
         return None
 
 
-@ROUTER.get("/get/{pk}", response_model=ReminderDTO | None)
 def get_one_reminder(pk: int) -> ReminderDTO | None:
     """Get reminder by ID"""
     try:
@@ -262,29 +273,30 @@ def get_one_reminder(pk: int) -> ReminderDTO | None:
 
 def sanitize(reminder: ReminderDTO) -> ReminderDTO | None:
     """Sanitize input"""
-    if not reminder.event or not reminder.user:
+    if not reminder.event:
         return None
     reminder.event = clean(reminder.event, tags=set()).replace("&amp;", "&")
     reminder.description = (
         clean(reminder.description, tags=set()).replace("&amp;", "&") if reminder.description else None
     )
-    reminder.user = clean(reminder.user, tags=set()).replace("&amp;", "&")
     return reminder
 
 
 @ROUTER.post("/add", response_model=ReminderDTO | None)
-def add_reminder(reminder: ReminderDTO) -> ReminderDTO | None:
+def add_reminder(reminder: ReminderDTO, user: Annotated[str, Depends(verify_token)]) -> ReminderDTO | None:
     """Add reminder"""
+    if not user:
+        return None
     r: Final[ReminderDTO | None] = sanitize(reminder)
     if not r:
         return None
-    r.user = get_user_hash(str(r.user))
     try:
+        user_hash: Final[str] = get_user_hash(user)
         if DEBUG:
             log("Adding reminder", str(r))
         get_all_reminders.cache_clear()
         return ReminderDTO(
-            **model_to_dict(Reminder.create(date=r.date, event=r.event, description=r.description, user=r.user))
+            **model_to_dict(Reminder.create(date=r.date, event=r.event, description=r.description, user=user_hash))
         ).sanitize()
     except Exception:  # pylint: disable=broad-exception-caught
         CONSOLE.print_exception()
@@ -292,18 +304,24 @@ def add_reminder(reminder: ReminderDTO) -> ReminderDTO | None:
 
 
 @ROUTER.put("/update/{pk}", response_model=ReminderDTO | None)
-def update_reminder(pk: int, reminder: ReminderDTO) -> ReminderDTO | None:
+def update_reminder(pk: int, reminder: ReminderDTO, user: Annotated[str, Depends(verify_token)]) -> ReminderDTO | None:
     """Update reminder by ID"""
+    if not user:
+        return None
     r: Final[ReminderDTO | None] = sanitize(reminder)
     if not r:
         return None
     try:
+        user_hash: Final[str] = get_user_hash(user)
         if DEBUG:
             log("Updating reminder", str(r))
         get_all_reminders.cache_clear()
         return (
             get_one_reminder(pk)
-            if Reminder.update(date=r.date, event=r.event, description=r.description).where(Reminder.id == pk).execute()
+            if Reminder.update(date=r.date, event=r.event, description=r.description)
+            .where(Reminder.id == pk)
+            .where(Reminder.user == user_hash)
+            .execute()
             > 0
             else None
         )
@@ -313,10 +331,13 @@ def update_reminder(pk: int, reminder: ReminderDTO) -> ReminderDTO | None:
 
 
 @ROUTER.delete("/delete/{pk}", response_model=bool)
-def delete_reminder(pk: int) -> bool:
+def delete_reminder(pk: int, user: Annotated[str, Depends(verify_token)]) -> bool:
     """Delete reminder by ID"""
+    if not user:
+        return False
     try:
-        reminder: Final[Reminder | None] = Reminder.get_or_none(Reminder.id == pk)
+        user_hash: Final[str] = get_user_hash(user)
+        reminder: Final[Reminder | None] = Reminder.get_or_none(Reminder.id == pk, Reminder.user == user_hash)
         if reminder:
             get_all_reminders.cache_clear()
             reminder.delete_instance()

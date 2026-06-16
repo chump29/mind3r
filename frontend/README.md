@@ -7,13 +7,13 @@
 ![Frontend](https://img.shields.io/badge/Frontend-1.0.0-chocolate?style=plastic&logo=docker "Frontend")
 
 ![Bun](https://img.shields.io/badge/Bun-~1.3.14-informational?style=plastic&logo=bun "Bun") &nbsp;
-![Mantine](https://img.shields.io/badge/Mantine-^9.3.1-informational?style=plastic&logo=mantine "Mantine") &nbsp;
+![Mantine](https://img.shields.io/badge/Mantine-^9.3.2-informational?style=plastic&logo=mantine "Mantine") &nbsp;
 ![React](https://img.shields.io/badge/React-^19.2.7-informational?style=plastic&logo=react "React") &nbsp;
 ![Tailwind](https://img.shields.io/badge/Tailwind-^4.3.1-informational?style=plastic&logo=tailwindcss "Tailwind") &nbsp;
 ![TypeScript](https://img.shields.io/badge/TypeScript-^6.0.3-informational?style=plastic&logo=typescript "TypeScript") &nbsp; <!-- markdownlint-disable-line MD013 -->
 ![Vite](https://img.shields.io/badge/Vite-^8.0.16-informational?style=plastic&logo=vite "Vite")
 
-![Coverage](https://img.shields.io/badge/Coverage-92.92%25-success?style=plastic&logo=v8 "Coverage")
+![Coverage](https://img.shields.io/badge/Coverage-92.8%25-success?style=plastic&logo=v8 "Coverage")
 
 ---
 
@@ -79,6 +79,17 @@ port@{shape: brace, label: "&nbsp; Nginx exposes port 80"}
 |      List       |       `bun list`       |       &mdash;       |
 |   List Extra    |    `bun list --all`    |       &mdash;       |
 |    Hierarchy    | `bun pm why [package]` | `bun why [package]` |
+
+#### Variables:
+
+| Description |     Key     |           Value            |
+|:-----------:|:-----------:|:--------------------------:|
+| API Timeout | API_TIMEOUT |             2s             |
+|   API URL   |   API_URL   | **null**/[url]<sup>1</sup> |
+|    Debug    |    DEBUG    |       true/**false**       |
+|  JWT Token  |    TOKEN    |          [token]           |
+
+<sup>1</sup> Appends `/api`
 
 ### 🧪 Development
 

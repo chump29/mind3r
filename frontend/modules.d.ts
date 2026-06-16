@@ -1,7 +1,8 @@
 declare module "bun" {
   interface Env {
-    VITE_API_URL: string
-    VITE_DEBUG: string
-    VITE_TITLE: string
+    readonly API_TIMEOUT: string
+    readonly API_URL: string
+    readonly DEBUG: string
+    readonly TOKEN: string
   }
 }

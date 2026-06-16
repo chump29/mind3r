@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, Final
 from api import (
     PORT,
     ReminderDTO,
-    UserDTO,
     add_reminder,
     delete_reminder,
     get_all_reminders,
@@ -68,7 +67,7 @@ def call_update_reminder(context: Context) -> None:
     """Call /update API with ID"""
     context.reminder.description = context.description
     context.reminder.user = context.user
-    context.reminder = update_reminder(pk=context.reminder.id, reminder=context.reminder)
+    context.reminder = update_reminder(pk=context.reminder.id, reminder=context.reminder, user=context.user)
     assert not context.failed, "/update with ID call failed"
 
 
@@ -82,13 +81,13 @@ def return_updated_data(context: Context) -> None:
 @given("that a user wants all reminders")
 def get_reminders(context: Context) -> None:
     """Get all reminders"""
-    add_reminder(ReminderDTO(date=fake.past_datetime(tzinfo=UTC), event=generate_event(), user=context.user))  # expired
+    add_reminder(ReminderDTO(date=fake.past_datetime(tzinfo=UTC), event=generate_event()), user=context.user)  # expired
 
 
 @when("/get API endpoint is called")
 def call_get(context: Context) -> None:
     """Call /get API"""
-    context.reminders = get_all_reminders(UserDTO(user=context.user))
+    context.reminders = get_all_reminders(context.user)
     assert not context.failed, "/get call failed"
 
 
@@ -107,7 +106,7 @@ def delete_reminder_by_id(_: Context) -> None:
 @when("/delete API endpoint is called with an ID")
 def call_delete(context: Context) -> None:
     """Call /delete API"""
-    context.isDeleted = delete_reminder(context.reminder.id)
+    context.isDeleted = delete_reminder(pk=context.reminder.id, user=context.user)
     assert not context.failed, "/delete call failed"
 
 
@@ -178,10 +177,10 @@ def bad_requests(_: Context) -> None:
 @when("provided bad input")
 def bad_input(context: Context) -> None:
     """Bad input"""
-    bad_reminder: Final[ReminderDTO] = ReminderDTO(date=fake.future_datetime(tzinfo=UTC), event="", user=context.user)
-    context.bad_add = add_reminder(bad_reminder)
-    context.bad_update = update_reminder(1, bad_reminder)
-    context.bad_delete = delete_reminder(fake.random_int(min=10))
+    bad_reminder: Final[ReminderDTO] = ReminderDTO(date=fake.future_datetime(tzinfo=UTC), event="")
+    context.bad_add = add_reminder(reminder=bad_reminder, user=context.user)
+    context.bad_update = update_reminder(pk=1, reminder=bad_reminder, user=context.user)
+    context.bad_delete = delete_reminder(pk=fake.random_int(min=10), user=context.user)
     assert not context.failed, "Bad API calls failed"
 
 
@@ -211,7 +210,7 @@ def stringify_reminder_dto(_: Context) -> None:
 @when("a ReminderDTO is output")
 def output_reminder_dto(context: Context) -> None:
     """Output a ReminderDTO"""
-    context.reminder_dto = str(get_new_reminder(context.user))
+    context.reminder_dto = str(get_new_reminder())
     assert not context.failed, "Unable to stringify ReminderDTO"
 
 

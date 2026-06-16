@@ -8,12 +8,12 @@
 
 ![Behave](https://img.shields.io/badge/Behave->=1.3.3-informational?style=plastic "Behave") &nbsp;
 ![FastAPI](https://img.shields.io/badge/FastAPI->=0.137.1-informational?style=plastic&logo=fastapi "FastAPI") &nbsp;
-![Peewee](https://img.shields.io/badge/Peewee->=4.0.8-informational?style=plastic "Peewee") &nbsp; <!-- markdownlint-disable-line MD013 -->
+![Peewee](https://img.shields.io/badge/Peewee->=4.1.0-informational?style=plastic "Peewee") &nbsp; <!-- markdownlint-disable-line MD013 -->
 ![Pydantic](https://img.shields.io/badge/Pydantic->=2.13.4-informational?style=plastic&logo=pydantic "Pydantic") &nbsp;
 ![SQLite](https://img.shields.io/badge/SQLite-3.51.2-informational?style=plastic&logo=sqlite "SQLite") &nbsp;
 ![uv](https://img.shields.io/badge/uv->=0.11-informational?style=plastic&logo=uv "uv")
 
-![Coverage](https://img.shields.io/badge/Coverage-96.53%25-success?style=plastic "Coverage")
+![Coverage](https://img.shields.io/badge/Coverage-91.50%25-success?style=plastic "Coverage")
 
 ---
 
@@ -25,19 +25,17 @@
 flowchart TD
 api@{shape: rect, label: "/api"}
 add_reminder[["`/add`"]]
-get_cache_stats[["`/cache`"]]
 delete_reminder[["`/delete/*[pk]*`"]]
 get_all_reminders[["`/get`"]]
-get_one_reminder[["`/get/*[pk]*`"]]
+get_cache_stats[["`/cache`"]]
 update_reminder[["`/update/*[pk]*`"]]
 get_version[["`/version`"]]
 api-->add_reminder
-api-->get_cache_stats
 api-->delete_reminder
 api-->get_all_reminders
-api-->get_one_reminder
-api-->update_reminder
+api-->get_cache_stats
 api-->get_version
+api-->update_reminder
 port@{shape: brace, label: "&nbsp; FastAPI exposes port 5559"}
 ```
 

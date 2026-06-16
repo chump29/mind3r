@@ -6,7 +6,7 @@ import { titleCase } from "title-case"
 
 import { type IReminder } from "../../../src/components/shared/IReminder.ts"
 import { FetchError, findElement, getVersion, handleError, validate } from "../../../src/components/shared/index.ts"
-import { generateReminder, generateReminders } from "../../helpers.ts"
+import { generateReminder, generateReminders } from "../../fakes.ts"
 
 describe("index", (): void => {
   test("findElement", (): void => {

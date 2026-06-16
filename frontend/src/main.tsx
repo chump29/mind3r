@@ -12,7 +12,7 @@ import { default as Display } from "./components/display/index.tsx"
 import { findElement, getVersion } from "./components/shared/index.ts"
 import { BooleanSchema, TimeoutSchema, UrlSchema, VersionSchema } from "./components/shared/schemas.ts"
 
-const debug: SafeParseResult<BooleanSchema> = safeParse(BooleanSchema, import.meta.env.VITE_DEBUG)
+const debug: SafeParseResult<BooleanSchema> = safeParse(BooleanSchema, Bun.env.DEBUG)
 const DEBUG: boolean = debug.success ? debug.output : false
 
 let uiVersion: string = ""
@@ -41,11 +41,11 @@ if (!backend) {
   error("Could not find backend version element")
 }
 
-const api_url: SafeParseResult<UrlSchema> = safeParse(UrlSchema, import.meta.env.VITE_API_URL)
+const api_url: SafeParseResult<UrlSchema> = safeParse(UrlSchema, Bun.env.API_URL)
 const API_URL: string = `${api_url.success ? api_url.output : ""}/api`
 
-const api_timeout: SafeParseResult<TimeoutSchema> = safeParse(TimeoutSchema, import.meta.env.VITE_API_TIMEOUT)
-const API_TIMEOUT: number = api_timeout.success ? api_timeout.output : ms("1s")
+const api_timeout: SafeParseResult<TimeoutSchema> = safeParse(TimeoutSchema, Bun.env.API_TIMEOUT)
+const API_TIMEOUT: number = api_timeout.success ? api_timeout.output : ms("2s")
 
 // * NOTE: not using await, don't hold up page render
 fetch(`${API_URL}/version`, {

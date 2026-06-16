@@ -11,9 +11,9 @@ import { default as ms } from "ms"
 import { titleCase } from "title-case"
 
 import Display from "../../../src/components/display/index.tsx"
+import { displayStore } from "../../../src/components/shared/displayStore.ts"
 import { type IReminder } from "../../../src/components/shared/IReminder.ts"
-import { displayStore } from "../../../src/components/shared/store.ts"
-import { generateEvent, generateReminder, generateReminders, generateUser } from "../../helpers.ts"
+import { generateEvent, generateReminder, generateReminders, generateUser } from "../../fakes.ts"
 
 configure({
   asyncUtilTimeout: ms("3s")
@@ -28,7 +28,7 @@ beforeAll((): void => {
 
   mockFetch(
     {
-      method: httpMethods.POST,
+      method: httpMethods.GET,
       url: "/api/get"
     },
     () => Response.json(data)

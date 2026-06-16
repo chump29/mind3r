@@ -23,7 +23,7 @@ import {
   UserSchema,
   VersionSchema
 } from "../../../src/components/shared/schemas.ts"
-import { generateDescription, generateEvent, generateUser } from "../../helpers.ts"
+import { generateDescription, generateEvent, generateUser } from "../../fakes.ts"
 
 describe("schema", (): void => {
   test("VersionSchema", (): void => {

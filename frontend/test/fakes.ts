@@ -35,8 +35,7 @@ const reminderData = (): IReminder =>
     date: fake.date.future().toISOString(),
     description: `${truncate(fake.lorem.sentence(), MAX_LEN_DESCRIPTION)}\n${fake.internet.email()}`,
     event: truncate(fake.company.buzzPhrase(), MAX_LEN_EVENT),
-    id: MAX_ID++,
-    user: generateUser()
+    id: MAX_ID++
   }) satisfies IReminder
 
 /**

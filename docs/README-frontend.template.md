@@ -80,6 +80,17 @@ port@{shape: brace, label: "&nbsp; Nginx exposes port 80"}
 |   List Extra    |    `bun list --all`    |       &mdash;       |
 |    Hierarchy    | `bun pm why [package]` | `bun why [package]` |
 
+#### Variables:
+
+| Description |     Key     |           Value            |
+|:-----------:|:-----------:|:--------------------------:|
+| API Timeout | API_TIMEOUT |             2s             |
+|   API URL   |   API_URL   | **null**/[url]<sup>1</sup> |
+|    Debug    |    DEBUG    |       true/**false**       |
+|  JWT Token  |    TOKEN    |          [token]           |
+
+<sup>1</sup> Appends `/api`
+
 ### 🧪 Development
 
 #### Scripts:

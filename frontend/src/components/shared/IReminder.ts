@@ -1,6 +1,6 @@
 import { type InferInput, object } from "valibot"
 
-import { DateTimeSchema, DescriptionSchema, EventSchema, IdSchema, UserSchema } from "./schemas.ts"
+import { DateTimeSchema, DescriptionSchema, EventSchema, IdSchema } from "./schemas.ts"
 
 /**
  * Validate an {@link IReminder} object
@@ -12,15 +12,12 @@ import { DateTimeSchema, DescriptionSchema, EventSchema, IdSchema, UserSchema } 
  * @see {@link EventSchema}
  * @property {number} [id]
  * @see {@link IdSchema}
- * @property {string} [user]
- * @see {@link UserSchema}
  */
 const ReminderSchema = object({
   date: DateTimeSchema,
   description: DescriptionSchema,
   event: EventSchema,
-  id: IdSchema,
-  user: UserSchema
+  id: IdSchema
 })
 
 type ReminderSchema = typeof ReminderSchema

@@ -37,14 +37,10 @@ def generate_description() -> str:
     return truncate_string(fake.sentence())
 
 
-def get_new_reminder(user: str) -> ReminderDTO:
+def get_new_reminder() -> ReminderDTO:
     """Return new ReminderDTO"""
     return ReminderDTO(
-        id=None,
-        date=fake.future_datetime(tzinfo=UTC),
-        event=generate_event(),
-        description=generate_description(),
-        user=user,
+        id=None, date=fake.future_datetime(tzinfo=UTC), event=generate_event(), description=generate_description()
     )
 
 
@@ -53,7 +49,7 @@ def before_feature(context: Context, _: Feature) -> None:
     Reminder.delete().execute(None)
     context.user = fake.first_name()
     assert context.user, "Could not set user"
-    context.reminder = add_reminder(get_new_reminder(context.user))
+    context.reminder = add_reminder(reminder=get_new_reminder(), user=context.user)
     assert context.reminder, "Could not add reminder"
 
 

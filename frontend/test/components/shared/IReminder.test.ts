@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test"
 import { type SafeParseResult, safeParse } from "valibot"
 
 import { type IReminder, ReminderSchema } from "../../../src/components/shared/IReminder.ts"
-import { generateReminder } from "../../helpers.ts"
+import { generateReminder } from "../../fakes.ts"
 
 describe("IReminder", (): void => {
   const reminder: IReminder = generateReminder()

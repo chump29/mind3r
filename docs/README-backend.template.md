@@ -25,19 +25,17 @@
 flowchart TD
 api@{shape: rect, label: "/api"}
 add_reminder[["`/add`"]]
-get_cache_stats[["`/cache`"]]
 delete_reminder[["`/delete/*[pk]*`"]]
 get_all_reminders[["`/get`"]]
-get_one_reminder[["`/get/*[pk]*`"]]
+get_cache_stats[["`/cache`"]]
 update_reminder[["`/update/*[pk]*`"]]
 get_version[["`/version`"]]
 api-->add_reminder
-api-->get_cache_stats
 api-->delete_reminder
 api-->get_all_reminders
-api-->get_one_reminder
-api-->update_reminder
+api-->get_cache_stats
 api-->get_version
+api-->update_reminder
 port@{shape: brace, label: "&nbsp; FastAPI exposes port $_backendPort"}
 ```
 
