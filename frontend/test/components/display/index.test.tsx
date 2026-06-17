@@ -31,7 +31,7 @@ beforeAll((): void => {
       method: httpMethods.GET,
       url: "/api/get"
     },
-    () => Response.json(data)
+    () => json(data)
   )
 
   mockFetch(
@@ -59,7 +59,6 @@ beforeAll((): void => {
   )
 
   localStorage.setItem("mind3rUser", generateUser())
-  console.info(`🔑 Logged in as: ${localStorage.getItem("mind3rUser")}`)
 })
 
 beforeEach(async (): Promise<void> => {
@@ -243,7 +242,8 @@ describe("index", (): void => {
   test("filter reminders", async (): Promise<void> => {
     const user: UserEvent = userEvent.setup()
 
-    const search: string = fake.word.sample()
+    const MIN_WORD_LEN: number = 3
+    const search: string = fake.word.sample(MIN_WORD_LEN)
 
     ;(displayStore.getState().filteredData.at(-1) as IReminder).description = search
 

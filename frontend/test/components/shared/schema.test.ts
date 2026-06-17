@@ -61,16 +61,12 @@ describe("schema", (): void => {
       const date: dayjs.Dayjs = dayjs().minute(notMultiple).startOf("minutes")
       setSystemTime(date.toDate())
 
-      info("From:", date.toISOString())
-
       let nextMinutes: number = Math.ceil(date.minute() / ROUND_TO_NEAREST_MINUTES) * ROUND_TO_NEAREST_MINUTES
       if (nextMinutes === 60) {
         nextMinutes = 0
       }
 
       const newDate: string = getDateTime()
-
-      info("To:", newDate)
 
       expect(dayjs(newDate).minute()).toBe(nextMinutes)
 
@@ -95,11 +91,7 @@ describe("schema", (): void => {
         .startOf("minutes")
       setSystemTime(date.toDate())
 
-      info("From:", date.toISOString())
-
       const newDate: string = getDateTime()
-
-      info("To:", newDate)
 
       expect(dayjs(newDate).diff(date)).toBe(ms(`${ROUND_TO_NEAREST_MINUTES}m`))
 

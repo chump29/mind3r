@@ -1,28 +1,32 @@
 import { describe, expect, test } from "bun:test"
 
-import { jwtVerify } from "jose/jwt/verify"
+import { UnsecuredJWT, type UnsecuredResult } from "jose"
 
 import { getHeaders } from "../../../src/components/shared/jwt.ts"
 import { generateUser } from "../../fakes.ts"
 
 describe("jwt", (): void => {
-  const userName: string = generateUser()
+  test("getHeaders", (): void => {
+    const userName: string = generateUser()
 
-  test("getHeaders", async (): Promise<void> => {
-    const headers: HeadersInit | undefined = await getHeaders(userName)
+    const headers: HeadersInit | undefined = getHeaders(userName)
 
     expect(headers).not.toBeUndefined()
 
-    const token: string | null = new Headers(headers).get("Authorization")
+    const token: string = new Headers(headers).get("Authorization")?.split(" ")[1] ?? ""
 
-    expect(token).not.toBeNull()
+    expect(token).not.toHaveLength(0)
 
-    await jwtVerify(token?.split(" ")[1] ?? "", new TextEncoder().encode(Bun.env.TOKEN), {
-      subject: userName,
-      typ: "JWT",
-      algorithms: [
-        "HS256"
-      ]
+    const jwt: UnsecuredResult = UnsecuredJWT.decode(token, {
+      subject: userName
     })
+
+    expect(jwt.payload.sub).toBe(userName)
+  })
+
+  test("getHeaders - fail", (): void => {
+    const headers: HeadersInit | undefined = getHeaders("")
+
+    expect(headers).toBeUndefined()
   })
 })

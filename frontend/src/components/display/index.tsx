@@ -77,16 +77,16 @@ import "./index.css"
 
 dayjs.extend(advancedFormat)
 
-const debug: SafeParseResult<BooleanSchema> = safeParse(BooleanSchema, Bun.env.DEBUG)
+const debug: SafeParseResult<BooleanSchema> = safeParse(BooleanSchema, import.meta.env.VITE_DEBUG)
 const DEBUG: boolean = debug.success ? debug.output : false
 if (DEBUG) {
   info("Debug is ON")
 }
 
-const api_url: SafeParseResult<UrlSchema> = safeParse(UrlSchema, Bun.env.API_URL)
+const api_url: SafeParseResult<UrlSchema> = safeParse(UrlSchema, import.meta.env.VITE_API_URL)
 const API_URL: string = `${api_url.success ? api_url.output : ""}/api`
 
-const api_timeout: SafeParseResult<TimeoutSchema> = safeParse(TimeoutSchema, Bun.env.API_TIMEOUT)
+const api_timeout: SafeParseResult<TimeoutSchema> = safeParse(TimeoutSchema, import.meta.env.VITE_API_TIMEOUT)
 const API_TIMEOUT: number = api_timeout.success ? api_timeout.output : ms("2s")
 
 const Th = ({
@@ -172,7 +172,7 @@ const Display = (): JSX.Element => {
     }
 
     return await fetch(url, {
-      headers: await getHeaders(user),
+      headers: getHeaders(user),
       method: httpMethods.GET,
       signal: AbortSignal.timeout(API_TIMEOUT)
     })
@@ -345,7 +345,7 @@ const Display = (): JSX.Element => {
 
   const handleDelete = async (id: number): Promise<void> => {
     await fetch(`${API_URL}/delete/${id}`, {
-      headers: await getHeaders(user),
+      headers: getHeaders(user),
       method: httpMethods.DELETE,
       signal: AbortSignal.timeout(API_TIMEOUT)
     })
@@ -393,7 +393,7 @@ const Display = (): JSX.Element => {
 
       await fetch(`${API_URL}/update/${editing.id}`, {
         body: JSON.stringify(r),
-        headers: await getHeaders(user),
+        headers: getHeaders(user),
         method: httpMethods.PUT,
         signal: AbortSignal.timeout(API_TIMEOUT)
       })

@@ -16,7 +16,7 @@ from cachetools import LRUCache, _CacheInfo, cached
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jwt import decode
+from jwt import InvalidTokenError, decode
 from nh3 import clean  # pylint: disable=no-name-in-module
 from peewee import AutoField, CharField, DateTimeField, Model, SqliteDatabase, TextField
 from playhouse.shortcuts import model_to_dict
@@ -146,7 +146,7 @@ def get_cache_stats() -> Json:
             """Get cached users"""
             json: list[str] = []
             if get_all_reminders.cache:
-                json.extend(item[0][1][1].user for item in list(get_all_reminders.cache.items()))
+                json.extend(item[0][1][1] for item in list(get_all_reminders.cache.items()))
             return json
 
         def create_stats(func: _cached_wrapper_info) -> Json:
@@ -207,28 +207,38 @@ def get_version() -> str | None:
         return None
 
 
-def invalid_token() -> None:
-    """Invalid token"""
+def invalid_jwt() -> None:
+    """Invalid JWT"""
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token", headers={"WWW-Authenticate": "Bearer"}
     )
 
 
-def verify_token(credentials: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer())]) -> str | None:
-    """Verify JWT"""
+def verify_jwt(credentials: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer())]) -> str | None:
+    """Verify unsecured JWT"""
     user: str | None = None
     try:
         payload = decode(
-            credentials.credentials,
-            getenv("TOKEN") or "",
-            options={"require": ["exp", "iat", "sub"]},
-            algorithms=["HS256"],
+            jwt=credentials.credentials,
+            options={
+                "require": ["exp", "iat", "sub"],
+                "verify_exp": True,
+                "verify_iat": True,
+                "verify_signature": False,
+                "verify_sub": True,
+            },
+            algorithms=["none"],
+            leeway=5,
         )
         user = payload.get("sub")
+    except InvalidTokenError:
+        if DEBUG:
+            CONSOLE.print_exception()
+        invalid_jwt()
     except Exception:  # pylint: disable=broad-exception-caught
         if DEBUG:
             CONSOLE.print_exception()
-        invalid_token()
+        raise
     return user
 
 
@@ -238,8 +248,8 @@ def get_user_hash(user: str) -> str:
 
 
 @ROUTER.get("/get", response_model=list[ReminderDTO] | None)
-@cached(cache=LRUCache(maxsize=10), info=True)
-def get_all_reminders(user: Annotated[str, Depends(verify_token)]) -> list[ReminderDTO] | None:
+@cached(cache=LRUCache(maxsize=3), info=True)
+def get_all_reminders(user: Annotated[str, Depends(verify_jwt)]) -> list[ReminderDTO] | None:
     """Get all reminders"""
     if not user:
         return None
@@ -283,7 +293,7 @@ def sanitize(reminder: ReminderDTO) -> ReminderDTO | None:
 
 
 @ROUTER.post("/add", response_model=ReminderDTO | None)
-def add_reminder(reminder: ReminderDTO, user: Annotated[str, Depends(verify_token)]) -> ReminderDTO | None:
+def add_reminder(reminder: ReminderDTO, user: Annotated[str, Depends(verify_jwt)]) -> ReminderDTO | None:
     """Add reminder"""
     if not user:
         return None
@@ -304,7 +314,7 @@ def add_reminder(reminder: ReminderDTO, user: Annotated[str, Depends(verify_toke
 
 
 @ROUTER.put("/update/{pk}", response_model=ReminderDTO | None)
-def update_reminder(pk: int, reminder: ReminderDTO, user: Annotated[str, Depends(verify_token)]) -> ReminderDTO | None:
+def update_reminder(pk: int, reminder: ReminderDTO, user: Annotated[str, Depends(verify_jwt)]) -> ReminderDTO | None:
     """Update reminder by ID"""
     if not user:
         return None
@@ -331,7 +341,7 @@ def update_reminder(pk: int, reminder: ReminderDTO, user: Annotated[str, Depends
 
 
 @ROUTER.delete("/delete/{pk}", response_model=bool)
-def delete_reminder(pk: int, user: Annotated[str, Depends(verify_token)]) -> bool:
+def delete_reminder(pk: int, user: Annotated[str, Depends(verify_jwt)]) -> bool:
     """Delete reminder by ID"""
     if not user:
         return False
